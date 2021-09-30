@@ -42,7 +42,7 @@ The global burden of mental health and the need for mental health support servic
 		
 3. Approach
 	
-An ML based model will be built which screens the employees with a couple of questions and predicts whether he has any mental illness like depression or anxiety with respect to work. If he is identified with some illness, a virtual assistant(chatbot) will help me to get proper help.
+An ML based model will be built which screens the employees with a couple of questions and predicts whether he has any mental illness like depression or anxiety with respect to work. If he is identified with some illness, a virtual assistant(chatbot) will help him to get proper help.
 
 4. Persona
 	
