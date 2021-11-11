@@ -1,0 +1,45 @@
+version: "3"
+
+services:
+  frontend:
+    build:
+      context: ./app
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    command: npm start
+  mongodb:
+    container_name: mongodb
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+  mongo-express:
+    container_name: mongo-express
+    depends_on:
+      - mongodb
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=false
+      - ME_CONFIG_MONGODB_AUTH_DATABASE=admin
+    image: mongo-express
+    ports:
+      - "3001:3001"
+  # api:
+  #   build:
+  #     context: ./api
+  #   container_name: api
+  #   depends_on:
+  #     - mongo-express
+  #   ports:
+  #     - "3002:3002"
+  #   command: npm start
+  # nginx:
+  #   restart: always
+  #   depends_on:
+  #     - api
+  #   build:
+  #     context: ./nginx
+  #   container_name: nginx
+  #   ports:
+  #     - "3004:3004"
