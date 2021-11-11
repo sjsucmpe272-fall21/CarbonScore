@@ -24,4 +24,6 @@ https://console.cloud.google.com/bigquery?project=clear-tape-314907&ws=!1m0!1m5!
 
 Table names: co_daily_summary, co_hourly_summary
 
-![alt text](https://excalidraw.com/#json=S9TDGd726HEh__7YchlrD,xOsyfdg-UzerZhnz7k8wcw)
+Static Design:
+
+https://excalidraw.com/#json=S9TDGd726HEh__7YchlrD,xOsyfdg-UzerZhnz7k8wcw
