@@ -1,41 +1,23 @@
-import React, { useState, useEffect } from "react";
-import LandingPage from './LandingPage';
-import LocationForm from './LocationForm';
+import logo from './logo.svg';
+import React, {useState, useEffect} from "react";
+import './App.css';
 import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
+  BrowserRouter,
+  Routes,
+  Route
 } from "react-router-dom";
 
-
-const backgroundStyle = {
-  backgroundColor: "#282c34",
-  minHeight: "100vh",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: "calc(10px + 2vmin)",
-  color: "white",
-  textAlign: "center",
-};
+import Landing from './pages/Landing'
+import Result from './pages/Result';
 
 function App() {
-  const [process, setProcess] = useState(null);
-  const [myCoordinates, setMyCoordinates] = useState({});
-  console.log(myCoordinates);
   return (
-    <Router>
-      <div style={backgroundStyle}>
-        <Switch>
-        <Route path="/:id" children={<LandingPage setProcess={setProcess}/>} />
-        { process != null ?
-          <LocationForm setMyCoordinates={setMyCoordinates} /> :
-          <LandingPage setProcess={setProcess}/>
-        }
-        </Switch>
-      </div>
-    </Router>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="result" element={<Result />} />
+        </Routes>
+      </BrowserRouter>
   );
 }
 
