@@ -58,6 +58,8 @@ export default function Landing() {
         setBodyContent(
             <div>
                 <input type="number" placeholder={new Date().getFullYear()} min={2000} max={3000} onChange={(e) => setYear(e.target.value)}/>
+                <br />
+                <br />
                 <AwesomeButton onPress={handleGetData}> Get Data </AwesomeButton>
             </div>
         );
