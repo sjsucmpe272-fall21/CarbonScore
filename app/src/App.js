@@ -6,7 +6,7 @@ import {
   Routes,
   Route
 } from "react-router-dom";
-
+import "react-awesome-button/dist/styles.css";
 import Landing from './pages/Landing'
 import Result from './pages/Result';
 
