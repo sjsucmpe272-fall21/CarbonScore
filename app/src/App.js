@@ -9,6 +9,7 @@ import {
 import "react-awesome-button/dist/styles.css";
 import Landing from './pages/Landing'
 import Result from './pages/Result';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="result" element={<Result />} />
+          <Route path="dashboard" element={<Dashboard />} />
         </Routes>
       </BrowserRouter>
   );
