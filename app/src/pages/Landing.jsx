@@ -27,7 +27,10 @@ export default function Landing() {
     const [bodyContent, setBodyContent] = useState();
     const [process, setProcess] = useState(null);
     const [myCoordinates, setMyCoordinates] = useState();
-    const [year, setYear] = useState(new Date().getFullYear());
+    const [year, setYear] = useState();
+    const [minYear, setMinYear] = useState(1980);
+    const [maxYear, setMaxYear] = useState(3000);
+    const currentYear = new Date().getFullYear();
 
     const handleGetData = () => {
         // Call backend to get results and pass as param
@@ -54,10 +57,10 @@ export default function Landing() {
     }
 
     const loadTimeData = () => {
-        setHeaderContent(TimeHeading);
+        setHeaderContent(TimeHeading)
         setBodyContent(
             <div>
-                <input type="number" placeholder={new Date().getFullYear()} min={2000} max={3000} onChange={(e) => setYear(e.target.value)}/>
+                <input type="range" placeholder={year} min={minYear} max={maxYear} onChange={(e) => setYear(e.target.value)}/>
                 <br />
                 <br />
                 <AwesomeButton onPress={handleGetData}> Get Data </AwesomeButton>
@@ -71,8 +74,19 @@ export default function Landing() {
 
     const handleProcess = (item) => {
         setProcess(item);
+        if (item === 'Existing') {
+            setMaxYear(currentYear)
+        } else if (item === 'Predict') {
+            setMinYear(currentYear + 1);
+        }
         loadGatherData();
     }
+
+    useEffect(() => {
+        if (year != null) {
+            loadTimeData();
+        }
+    }, [year]);
       
     return (
         <div style={backgroundStyle}>
@@ -81,6 +95,11 @@ export default function Landing() {
                     {headerContent}
                 </p>
             </header>
+            { headerContent === TimeHeading &&
+                <h1>
+                    {year == null ? minYear : year}
+                </h1>
+            }
             {bodyContent}
         </div> 
     )
