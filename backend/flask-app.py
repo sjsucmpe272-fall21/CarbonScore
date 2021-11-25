@@ -1,7 +1,13 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import os
 from pymongo import MongoClient
 import argparse
+import pandas as pd
+import xgboost as xgb
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_squared_error
+import datetime
 
 app = Flask(__name__)
 # TODO store state names and county names in memory?
@@ -9,6 +15,8 @@ state_names = []
 county_names = []
 offset_interval = 80000
 row_count = 8614411
+model_cs = ""
+
 
 def connectToMongoCollection():
     # mongo_client = MongoClient("mongodb://localhost:27017/")
@@ -76,6 +84,35 @@ def init_counties():
         full_county_name = item['county']+', '+item['state']
         county_names.append(full_county_name)
 
+def init_full_data():
+    df = pd.read_csv("final.csv")
+    df['date_local'] = pd.to_datetime(df['date_local'])
+    df["year"] = pd.DatetimeIndex(df['date_local']).year  
+    df["month"] = pd.DatetimeIndex(df['date_local']).month
+    df["day"] = pd.DatetimeIndex(df['date_local']).day  
+    return df
+
+def get_model(df):
+    df_extract = df[["state_code","county_code","site_num", "year","month","day","arithmetic_mean", "parameter_name"]]
+    df_extract["state_code"] = df_extract["state_code"].astype(int)
+    df_extract["county_code"] = df_extract["county_code"].astype(int)
+    df_extract["site_num"] = df_extract["site_num"].astype(int)
+    df_g = df_extract.groupby(["state_code", "county_code","site_num","year","month","day"])["arithmetic_mean"].mean().reset_index()
+    X = df_g.drop(["arithmetic_mean"], axis=1)
+    y = df_g[["arithmetic_mean"]]
+    train_X = X[:1100000]
+    test_X = X[1100000:]
+    train_y = y[:1100000]
+    test_y = y[1100000:]
+    scaler = MinMaxScaler()
+    train_scaled = scaler.fit_transform(train_X)
+    test_scaled = scaler.fit_transform(test_X)
+    xg = xgb.XGBRegressor()
+    xg.fit(train_scaled, train_y)
+    pred = xg.predict(test_scaled)
+    print("MSE: ", mean_squared_error(pred, test_y))
+    return xg, scaler
+
 def test_state_insert():
     df = ['hello-state','hg33','sahee']
     mongo_dict_list = []
@@ -104,10 +141,27 @@ def get_states():
 def get_counties():
     return jsonify(county_names)
 
+@app.route("/getscore")
+def get_carbon_score():
+    state = int(request.args.get("state_code"))
+    county = int(request.args.get("county_code"))
+    city = int(request.args.get("site_num"))
+    date_l = request.args.get("date_local")
+    #print(type(date_l))
+    dd = datetime.datetime.strptime(date_l,"%Y-%m-%d")
+    new_df = pd.DataFrame({"state_code":[state], "county_code":[county], "site_num":[city], "year":[dd.year], "month":[dd.month],"day":[dd.day]})
+    scaled_val = scaler.fit_transform(new_df)
+    #print(type(model_cs.predict(scaled_val)))
+    return jsonify({"Carbon Score":str(model_cs.predict(scaled_val)[0])})
+    
+
 if __name__ == '__main__':
     connectToMongoCollection()
     init_states()
     init_counties()
+    ddf = init_full_data()
+    model_cs, scaler = get_model(ddf)
+    #app.run(host="0.0.0.0")
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
     #test_state_insert()
     #test_county_insert()
