@@ -8,6 +8,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 import datetime
+import joblib
+import pickle
 
 app = Flask(__name__)
 # TODO store state names and county names in memory?
@@ -16,6 +18,11 @@ county_names = []
 offset_interval = 80000
 row_count = 8614411
 model_cs = ""
+filename = "gbr.pkl"
+model_cs = pickle.load(open(filename, 'rb'))
+print("Training Model Loaded")
+scaler = MinMaxScaler()
+
 
 
 def connectToMongoCollection():
@@ -159,8 +166,8 @@ if __name__ == '__main__':
     connectToMongoCollection()
     init_states()
     init_counties()
-    ddf = init_full_data()
-    model_cs, scaler = get_model(ddf)
+    #ddf = init_full_data()
+    #model_cs, scaler = get_model(ddf)
     #app.run(host="0.0.0.0")
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
     #test_state_insert()
