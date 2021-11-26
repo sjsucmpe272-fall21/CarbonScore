@@ -26,36 +26,43 @@ const box3 = {
     gridRow: 2/3
 };
 
-
-export default function Dashboard() {
-    let location = useLocation();
-    const { data } = location.state;
-    const config = {mapboxAccessToken: process.env.REACT_APP_MAP_BOX_ACCESS_TOKEN}
+const getBarChartData = () => {
     const barChartTrace1 = {
         x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], // months
-        y: [20, 14, 23,20, 14, 23,20, 14, 23, 12], // concentration values (number/float)
+        y: [20, 14, 23,20, 14, 23,20, 14, 23, 12, 14,2], // concentration values (number/float)
         name: 'Carbon', // plutant name
         type: 'bar'
     };
     const barChartTrace2 = {
         x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-        y: [20, 14, 23,20, 14, 23,16, 5, 11, 9], 
+        y: [20, 14, 23,20, 14, 23,16, 5, 11, 9, 14,2], 
         name: 'Nitrogen',
         type: 'bar'
     };
+    return [barChartTrace1, barChartTrace2]
+}
 
-    var lineChartTrace1 = {
+const getLineChartData = () => {
+    const lineChartTrace1 = {
         x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-        y: [2, 14, 12,20, 15, 23,16, 5, 11, 9], // concentration
+        y: [2, 14, 12,20, 15, 23,16, 5, 11, 9, 14,2], // concentration
         type: 'scatter',
         name: 'Carbon'
     };
-    var lineChartTrace2 = {
+    const lineChartTrace2 = {
         x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-        y: [20, 14, 23,20, 14, 23,20, 14, 23, 12], // concentration
+        y: [20, 14, 23,20, 14, 23,20, 14, 23, 12, 14,2], // concentration
         type: 'scatter',
         name: 'Nitrogen'
     };
+    return [lineChartTrace1, lineChartTrace2]
+}
+
+
+export default function Dashboard() {
+    let location = useLocation();
+    const { data } = location.state;
+    const config = {mapboxAccessToken: process.env.REACT_APP_MAP_BOX_ACCESS_TOKEN}
                   
     return (
         <div style={backgroundStyle}>
@@ -81,18 +88,14 @@ export default function Dashboard() {
                 <div class="box2" style={box2}>
                     <Plot
                         config={config}
-                        data={
-                            [lineChartTrace1, lineChartTrace2]
-                        }
+                        data={getLineChartData()}
                         layout={ {width: 500, height: 300} }
                     />
                 </div>
                 <div class="box4" style={box3}>
                     <Plot
                         config={config}
-                        data={
-                            [barChartTrace1, barChartTrace2]
-                        }
+                        data={getBarChartData()}
                         layout={ {barmode: 'group', title: 'Annual Breakdown', width: 500, height: 300} }
                     />
                 </div>
