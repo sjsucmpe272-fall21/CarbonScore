@@ -19,6 +19,15 @@ const LandingHeading = "Do you want to check a predicted future Carbon Score or 
 const GatherDataHeading = "Please select the State/County for which you want to check the Carbon Score"
 const TimeHeading = "What year do you want to look at?"
 
+const getMinYearAvailableForExisting = () => {
+    return 2014;
+}
+
+const getMaxYearAvailableForPrediction = () => {
+    return 2040;
+}
+
+
 export default function Landing() {
 
     let navigate = useNavigate();
@@ -28,9 +37,8 @@ export default function Landing() {
     const [process, setProcess] = useState(null);
     const [myCoordinates, setMyCoordinates] = useState();
     const [year, setYear] = useState();
-    const [minYear, setMinYear] = useState(1980);
-    const [maxYear, setMaxYear] = useState(3000);
-    const currentYear = new Date().getFullYear();
+    const [minYear, setMinYear] = useState(getMinYearAvailableForExisting());
+    const [maxYear, setMaxYear] = useState(getMaxYearAvailableForPrediction());
 
     const handleGetData = () => {
         // Call backend to get results and pass as param
@@ -75,9 +83,9 @@ export default function Landing() {
     const handleProcess = (item) => {
         setProcess(item);
         if (item === 'Existing') {
-            setMaxYear(currentYear)
+            setMaxYear(2019)
         } else if (item === 'Predict') {
-            setMinYear(currentYear + 1);
+            setMinYear(2022);
         }
         loadGatherData();
     }
