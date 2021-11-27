@@ -1,5 +1,6 @@
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
 import { AwesomeButton } from 'react-awesome-button';
+import { states } from '../utils/States';
 
 const addressInput = {
     display: "flex",
@@ -26,8 +27,10 @@ const fetchInit = {
   };
   
 export default function LocationForm({setMyCoordinates, loadTimeData}) {
-
     const [address, setAddress] = useState('');
+    const [selectState, setSelectState] = useState("");
+    const [selectCounty, setSelectCounty] = useState("");
+    const [map, setMap] = useState({});
 
     const getSearchUrl = (address,format,polygon,addressDetails)=>{
         format = format != null ? format : 'json';
@@ -36,8 +39,25 @@ export default function LocationForm({setMyCoordinates, loadTimeData}) {
         return (openStreetMapSearchUrl + '?format='+format+'&q=' + address + '&polygon=' + polygon + '&addressdetails='+addressDetails).replace(/\s/g, '+');
     };
 
+    useEffect(() => {
+      fetch( "http://carbon-score.us-west-1.elasticbeanstalk.com/counties")
+      .then(response => {
+        response.json().then(data => {
+          const stateCounty = {};
+          data.map(item => {
+            const arr = String(item).split(', ');
+            const county = arr[0];
+            const state = arr[1];
+            stateCounty[state] = stateCounty[state] || [];
+            stateCounty[state].push(county);
+          })
+          setMap(stateCounty)
+        })
+      })
+      .catch(err => console.log(err))
+    }, [])
 
-    const handleSubmit = () => {
+    /*const handleSubmit = () => {
         if (address.trim() === '') {
           return;
         }
@@ -66,7 +86,7 @@ export default function LocationForm({setMyCoordinates, loadTimeData}) {
           // TODO: log error
           console.log(err);
         }
-      };
+      };*/
 
       const onAddressInputFieldChange = (e) => {
         setAddress(e.target.value);
@@ -76,12 +96,31 @@ export default function LocationForm({setMyCoordinates, loadTimeData}) {
 
         <div>
             <div style={addressInput}> 
-              <label for="address" style={addressLabel}>Address:</label>
-              <input type="address" name="address" onChange={onAddressInputFieldChange} placeholder="1234 Maple Dr. Mushroom City, CA 12345" />
+            <label  style={addressLabel}>States:</label>
+            <select placeholder="enter state" name="states" defaultChecked={false} style={{width:"150px"}}
+            onChange={(e)=> setSelectState(e.target.value)}>
+              <option value=""/>
+              {map && (Object.keys(map)).map((item) => {
+                console.log(item)
+                return <option value={item}>{item}</option>
+              })}
+            </select>
+              {/* <label for="address" style={addressLabel}>Address:</label>
+              <input type="address" name="address" onChange={onAddressInputFieldChange} placeholder="1234 Maple Dr. Mushroom City, CA 12345" /> */}
             </div>
+            {selectState.length > 0 && <div style={addressInput}>
+              <label  style={addressLabel}>County:</label>
+            <select placeholder="enter state" name="county" style={{width:"150px"}}
+            onSelect={(e)=> setSelectCounty(e.target.value)}>
+              <option value=""/>
+              {map[selectState].map((item) => {
+                return <option value={item}>{item}</option>
+              })}
+            </select>
+            </div>}
             <AwesomeButton
               type="primary"
-              onPress={handleSubmit}
+              onPress={loadTimeData}
             >
               Submit
             </AwesomeButton>
