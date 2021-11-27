@@ -1,6 +1,5 @@
 import React, {useState, useEffect} from 'react'
 import { AwesomeButton } from 'react-awesome-button';
-import { states } from '../utils/States';
 
 const addressInput = {
     display: "flex",
@@ -99,7 +98,6 @@ export default function LocationForm({setMyCoordinates, loadTimeData}) {
             <label  style={addressLabel}>States:</label>
             <select placeholder="enter state" name="states" defaultChecked={false} style={{width:"150px"}}
             onChange={(e)=> setSelectState(e.target.value)}>
-              <option value=""/>
               {map && (Object.keys(map)).map((item) => {
                 console.log(item)
                 return <option value={item}>{item}</option>
