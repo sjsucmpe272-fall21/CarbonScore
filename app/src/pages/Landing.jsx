@@ -1,6 +1,5 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { AwesomeButton } from 'react-awesome-button';
-import LocationForm from '../components/LocationForm';
 import {useNavigate} from 'react-router-dom';
 
 export const backgroundStyle = {
@@ -15,10 +14,6 @@ export const backgroundStyle = {
     textAlign: "center",
   };
 
-const LandingHeading = "Do you want to check a predicted future Carbon Score or an existing Score?";
-const GatherDataHeading = "Please select the State/County for which you want to check the Carbon Score"
-const TimeHeading = "What year do you want to look at?"
-
 export default function Landing({
     maxYear,
     minYear,
@@ -26,6 +21,9 @@ export default function Landing({
     setMinYear,
     setProcess,
     setYear,
+    selectState, 
+    setSelectState,
+    selectCounty, 
     year
 }) {
 
@@ -33,48 +31,12 @@ export default function Landing({
 
     const [headerContent, setHeaderContent] = useState()
     const [bodyContent, setBodyContent] = useState();
-    const [myCoordinates, setMyCoordinates] = useState();
 
     const handleGetData = () => {
         // Call backend to get results and pass as param
         navigate('result', { state: {result:"abc"} })
     }
-
-    const loadLanding = () => {
-        setHeaderContent(LandingHeading);
-        setBodyContent(
-            <div>
-                <AwesomeButton type="primary" onPress={() => {handleProcess("Predict")}}>Predict</AwesomeButton>
-                &nbsp;
-                &nbsp;
-                <AwesomeButton onPress={() => {handleProcess("Existing")}}>Existing</AwesomeButton>
-            </div>
-        );
-    }
-
-    const loadGatherData = () => {
-        setHeaderContent(GatherDataHeading);
-        setBodyContent(
-            <LocationForm setMyCoordinates={setMyCoordinates} loadTimeData={loadTimeData}/>
-        );
-    }
-
-    const loadTimeData = () => {
-        setHeaderContent(TimeHeading)
-        setBodyContent(
-            <div>
-                <input type="range" placeholder={year} min={minYear} max={maxYear} onChange={(e) => setYear(e.target.value)}/>
-                <br />
-                <br />
-                <AwesomeButton onPress={handleGetData}> Get Data </AwesomeButton>
-            </div>
-        );
-    }
-
-    useEffect(() => {
-        loadLanding();
-    }, [])
-
+    
     const handleProcess = (item) => {
         setProcess(item);
         if (item === 'Existing') {
@@ -82,28 +44,22 @@ export default function Landing({
         } else if (item === 'Predict') {
             setMinYear(2022);
         }
-        loadGatherData();
+        navigate('location', { state: {result:"abc"} })
     }
-
-    useEffect(() => {
-        if (year != null) {
-            loadTimeData();
-        }
-    }, [year]);
       
     return (
         <div style={backgroundStyle}>
             <header>
                 <p>
-                    {headerContent}
+                    {"Do you want to check a predicted future Carbon Score or an existing Score?"}
                 </p>
             </header>
-            { headerContent === TimeHeading &&
-                <h1>
-                    {year == null ? minYear : year}
-                </h1>
-            }
-            {bodyContent}
+            <div>
+                <AwesomeButton type="primary" onPress={() => {handleProcess("Predict")}}>Predict</AwesomeButton>
+                &nbsp;
+                &nbsp;
+                <AwesomeButton onPress={() => {handleProcess("Existing")}}>Existing</AwesomeButton>
+            </div>
         </div> 
     )
 }

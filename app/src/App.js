@@ -9,7 +9,9 @@ import {
 import "react-awesome-button/dist/styles.css";
 import Landing from './pages/Landing'
 import Result from './pages/Result';
+import TimeForm from './pages/TimeForm'
 import Dashboard from './pages/Dashboard';
+import LocationForm from './components/LocationForm';
 
 const getMinYearAvailableForExisting = () => {
   return 2014;
@@ -23,7 +25,9 @@ function App() {
   const [process, setProcess] = useState(null);
   const [minYear, setMinYear] = useState(getMinYearAvailableForExisting());
   const [maxYear, setMaxYear] = useState(getMaxYearAvailableForPrediction());
-  const [year, setYear] = useState();
+  const [year, setYear] = useState(null);
+  const [selectState, setSelectState] = useState("");
+  const [selectCounty, setSelectCounty] = useState(null);
 
   return (
       <BrowserRouter>
@@ -39,8 +43,35 @@ function App() {
                 setMinYear={setMinYear}
                 setProcess={setProcess}
                 setYear={setYear}
+                selectState={selectState}
+                setSelectState={setSelectState}
+                selectCounty={selectCounty}
                 year={year}
               />
+            } 
+          />
+          <Route 
+            path="location" 
+            element={
+              <LocationForm
+                minYear={minYear}
+                selectState={selectState}
+                setSelectState={setSelectState}
+                selectCounty={selectCounty}
+                setSelectCounty={setSelectCounty}
+                year={year}
+              /> 
+            } 
+          />
+          <Route 
+            path="time" 
+            element={
+              <TimeForm
+                maxYear={maxYear}
+                minYear={minYear}
+                setYear={setYear}
+                year={year}
+              /> 
             } 
           />
           <Route 
@@ -49,11 +80,13 @@ function App() {
               <Result 
                 minYear={minYear} 
                 process={process} 
+                selectCounty={selectCounty}
+                selectState={selectState}
                 year={year}
               />
             } 
           />
-          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="dashboard" element={<Dashboard county={selectCounty}/>} />
         </Routes>
       </BrowserRouter>
   );
