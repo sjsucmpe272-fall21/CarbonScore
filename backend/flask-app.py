@@ -10,6 +10,7 @@ from sklearn.metrics import mean_squared_error
 import datetime
 import joblib
 import pickle
+from mapping import *
 
 app = Flask(__name__)
 # TODO store state names and county names in memory?
@@ -18,9 +19,13 @@ county_names = []
 offset_interval = 80000
 row_count = 8614411
 model_cs = ""
-filename = "gbr.pkl"
-model_cs = pickle.load(open(filename, 'rb'))
-print("Training Model Loaded")
+mapp = "map.pkl"
+chartp = "charts.pkl"
+pollp = "pollutant.pkl" 
+model_map = pickle.load(open(mapp, 'rb'))
+model_chart = pickle.load(open(chartp, 'rb'))
+model_poll = pickle.load(open(pollp, 'rb'))
+print("Training Model Loaded!!")
 scaler = MinMaxScaler()
 
 
@@ -150,16 +155,53 @@ def get_counties():
 
 @app.route("/getscore")
 def get_carbon_score():
-    state = int(request.args.get("state_code"))
-    county = int(request.args.get("county_code"))
-    city = int(request.args.get("site_num"))
-    date_l = request.args.get("date_local")
-    #print(type(date_l))
-    dd = datetime.datetime.strptime(date_l,"%Y-%m-%d")
-    new_df = pd.DataFrame({"state_code":[state], "county_code":[county], "site_num":[city], "year":[dd.year], "month":[dd.month],"day":[dd.day]})
+    state = str(request.args.get("state"))
+    county = str(request.args.get("county"))
+    year = int(request.args.get("year"))
+    new_df = pd.DataFrame({"state_code":[state_mapping[state]], "county_code":[county_mapping[county]],  "year":[year]})
+    print(new_df)
     scaled_val = scaler.fit_transform(new_df)
-    #print(type(model_cs.predict(scaled_val)))
-    return jsonify({"Carbon Score":str(model_cs.predict(scaled_val)[0])})
+    cs = model_map.predict(scaled_val)[0]
+    return jsonify({"Carbon Score":cs, "tax_amount": (cs*4700).round(2) })
+
+@app.route("/getmap")
+def get_map_score():
+    ddict = {'state_code':[],
+        'county_code':[],
+        'year':[]
+    }
+    ddf = pd.DataFrame(ddict)
+    state = str(request.args.get("state"))
+    year = int(request.args.get("year"))
+    state_code = state_mapping[state]
+    #print(county_names['California'])
+    for i in county_names_dict[state]:
+        ddf.loc[len(ddf.index)] = [state_code, county_mapping[i], year]
+    
+    # new_df = pd.DataFrame({"state_code":[state_mapping[state]], "county_code":[county_mapping[county]],  "year":[year]})
+    # print(new_df)
+    scaled_val = scaler.fit_transform(ddf)
+    cs = model_map.predict(scaled_val)
+    print(cs)
+    return jsonify({"Carbon Score":'test' })
+
+# @app.route("/getpollutant")
+# def get_pollutant_score():
+#     # ddict = {'state_code':[],
+#     #     'county_code':[],
+#     #     'year':[]
+#     # }
+#     ddf = pd.DataFrame(ddict)
+#     state = str(request.args.get("state"))
+#     county = str(request.args.get("county"))
+#     year = int(request.args.get("year"))
+#     state_code = state_mapping[state]
+#     new_df = pd.DataFrame({"state_code":[state_mapping[state]], "county_code":[county_mapping[county]],  "year":[year]})
+#     print(new_df)
+#     scaled_val = scaler.fit_transform(ddf)
+#     cs = model_map.predict(scaled_val)
+#     print(cs)
+#     return jsonify({"Carbon Score":'test' })
     
 
 if __name__ == '__main__':
