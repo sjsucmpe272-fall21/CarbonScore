@@ -16,7 +16,7 @@ export const backgroundStyle = {
   };
 
 const LandingHeading = "Do you want to check a predicted future Carbon Score or an existing Score?";
-const GatherDataHeading = "What county do you want to check the CarbonScore for?"
+const GatherDataHeading = "Please select the State/County for which you want to check the Carbon Score"
 const TimeHeading = "What year do you want to look at?"
 
 export default function Landing() {
