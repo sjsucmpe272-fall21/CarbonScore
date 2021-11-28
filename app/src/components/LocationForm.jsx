@@ -98,9 +98,8 @@ export default function LocationForm({setMyCoordinates, loadTimeData}) {
             <label  style={addressLabel}>States:</label>
             <select placeholder="enter state" name="states" defaultChecked={false} style={{width:"150px"}}
             onChange={(e)=> setSelectState(e.target.value)}>
-              {map && (Object.keys(map)).map((item) => {
-                console.log(item)
-                return <option value={item}>{item}</option>
+              {map && (Object.keys(map)).map((item, idx) => {
+                return <option key={idx} value={item}>{item}</option>
               })}
             </select>
               {/* <label for="address" style={addressLabel}>Address:</label>
@@ -111,8 +110,8 @@ export default function LocationForm({setMyCoordinates, loadTimeData}) {
             <select placeholder="enter state" name="county" style={{width:"150px"}}
             onSelect={(e)=> setSelectCounty(e.target.value)}>
               <option value=""/>
-              {map[selectState].map((item) => {
-                return <option value={item}>{item}</option>
+              {map[selectState].map((item,idx) => {
+                return <option key={idx} value={item}>{item}</option>
               })}
             </select>
             </div>}

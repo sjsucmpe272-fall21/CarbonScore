@@ -4,7 +4,12 @@ import { AwesomeButton } from 'react-awesome-button';
 import { backgroundStyle } from './Landing'
 import {useNavigate} from 'react-router-dom';
 
-export default function Result() {
+export default function Result({
+    maxYear, 
+    minYear, 
+    process, 
+    year
+}) {
     let location = useLocation();
     const { data } = location.state;
     const navigate = useNavigate();
@@ -12,11 +17,15 @@ export default function Result() {
         // Call backend to get results and pass as param
         navigate('../dashboard', { state: {result:"abc"}, replace: false })
     }
+    const header = year != null ? 
+        (process === 'Predict' ? 'Predicted Carbon Score for the year ' + year.toString() : 'Existing Carbon Score for the year ' + year.toString()) 
+        : 'Carbon Score'
+
     return (
         <div style={backgroundStyle}>
             <header>
                 <p>
-                    Carbon Score
+                    {header}
                 </p>
                 <p>
                     {810}
