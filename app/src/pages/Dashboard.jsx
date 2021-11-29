@@ -110,6 +110,7 @@ export default function Dashboard({
     minYear,
     processOption,
     setYear,
+    state,
     year,
 }) {
     let location = useLocation();
@@ -119,20 +120,45 @@ export default function Dashboard({
     const [lineChartData, setLineChartData] = useState(getDefaultLineChartData())
     const [tableData, setTableChartData] = useState(getDefaultTableData())
     const [mapData, setMapData] = useState(getDefaultMapData(county))
-
+    console.log(barChartData);
+    console.log(lineChartData);
     useEffect(() => {
-        fetch("http://carbon-score.us-west-1.elasticbeanstalk.com/barChartData" + (county != null && county != '' ? `?county=${county}` : ''))
+        let existingCOURL;
+        if (county != null) {
+            existingCOURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_county" + (county != null && county != '' ? `&county=${county}` : '')
+        } else if (state != null) {
+            existingCOURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_state" + (state != null && state != '' ? `?state=${state}` : '')
+        } else {
+            console.err('There is an error with the URL used to query data for the dashboard');
+        }
+        existingCOURL += (year != null && year != '' ? `&year=${year}` : '')
+
+        fetch(existingCOURL)
         .then(response => {
           response.json().then(data => {
-            setBarChartData(data)
+            setBarChartData(
+                [{
+                    x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    y: data.map(item => Math.floor(item * 100)),
+                    type: 'bar',
+                    name: 'Carbon'
+                }]
+            )
           })
         })
         .catch(err => console.log(err))
 
-        fetch("http://carbon-score.us-west-1.elasticbeanstalk.com/lineChartData" + (county != null && county != '' ? `?county=${county}` : ''))
+        fetch(existingCOURL)
         .then(response => {
           response.json().then(data => {
-            setLineChartData(data)
+            setLineChartData(
+                [{
+                    x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    y: data.map(item => Math.floor(item * 100)),
+                    type: 'scatter',
+                    name: 'Carbon'
+                }]
+            )
           })
         })
         .catch(err => console.log(err))
@@ -153,7 +179,7 @@ export default function Dashboard({
         })
         .catch(err => console.log(err))
       }, [])
-      console.log(process)
+
       return (
         <div style={backgroundStyle}>
             <header>

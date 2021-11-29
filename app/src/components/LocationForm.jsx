@@ -3,6 +3,8 @@ import { AwesomeButton } from 'react-awesome-button';
 import {useNavigate} from 'react-router-dom';
 import { backgroundStyle } from '../pages/Landing'
 
+const DEFAULT_STATE = 'California';
+
 const addressInput = {
     display: "flex",
     flexDirection: "row",
@@ -55,7 +57,7 @@ export default function LocationForm({
             stateCounty[state] = stateCounty[state] || [];
             stateCounty[state].push(county);
           })
-          setSelectState(Object.keys(stateCounty)[0]);
+          setSelectState(DEFAULT_STATE);
           setMap(stateCounty)
         })
       })
@@ -113,6 +115,7 @@ export default function LocationForm({
                   defaultChecked={false} 
                   style={{width:"150px"}}
                   onChange={(e)=> setSelectState(e.target.value)}
+                  value={selectState}
                 >
                   {map != null && (Object.keys(map)).map((item, idx) => {
                     return <option key={`state_${idx}`} value={item}>{item}</option>
