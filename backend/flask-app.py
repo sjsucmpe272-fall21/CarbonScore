@@ -3,6 +3,15 @@ from flask_cors import CORS
 import os
 from pymongo import MongoClient
 import argparse
+import pandas as pd
+import xgboost as xgb
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_squared_error
+import datetime
+import joblib
+import pickle
+from mapping import *
 
 app = Flask(__name__)
 CORS(app)
@@ -10,6 +19,15 @@ state_names = []
 county_names = []
 offset_interval = 80000
 row_count = 8614411
+model_cs = ""
+mapp = "map.pkl"
+chartp = "charts.pkl"
+pollp = "pollutant.pkl" 
+model_map = pickle.load(open(mapp, 'rb'))
+model_chart = pickle.load(open(chartp, 'rb'))
+model_poll = pickle.load(open(pollp, 'rb'))
+print("Training Model Loaded!!")
+scaler = MinMaxScaler()
 
 def connectToMongoCollection():
     # mongo_client = MongoClient("mongodb://localhost:27017/")
@@ -35,6 +53,35 @@ def init_counties():
     for item in result:
         full_county_name = item['county']+', '+item['state']
         county_names.append(full_county_name)
+
+def init_full_data():
+    df = pd.read_csv("final.csv")
+    df['date_local'] = pd.to_datetime(df['date_local'])
+    df["year"] = pd.DatetimeIndex(df['date_local']).year  
+    df["month"] = pd.DatetimeIndex(df['date_local']).month
+    df["day"] = pd.DatetimeIndex(df['date_local']).day  
+    return df
+
+def get_model(df):
+    df_extract = df[["state_code","county_code","site_num", "year","month","day","arithmetic_mean", "parameter_name"]]
+    df_extract["state_code"] = df_extract["state_code"].astype(int)
+    df_extract["county_code"] = df_extract["county_code"].astype(int)
+    df_extract["site_num"] = df_extract["site_num"].astype(int)
+    df_g = df_extract.groupby(["state_code", "county_code","site_num","year","month","day"])["arithmetic_mean"].mean().reset_index()
+    X = df_g.drop(["arithmetic_mean"], axis=1)
+    y = df_g[["arithmetic_mean"]]
+    train_X = X[:1100000]
+    test_X = X[1100000:]
+    train_y = y[:1100000]
+    test_y = y[1100000:]
+    scaler = MinMaxScaler()
+    train_scaled = scaler.fit_transform(train_X)
+    test_scaled = scaler.fit_transform(test_X)
+    xg = xgb.XGBRegressor()
+    xg.fit(train_scaled, train_y)
+    pred = xg.predict(test_scaled)
+    print("MSE: ", mean_squared_error(pred, test_y))
+    return xg, scaler
 
 @app.route("/states")
 def get_states():
@@ -163,8 +210,62 @@ def test_s3_small():
     except Exception as e:
         return jsonify(str(e))
 
+@app.route("/getscore")
+def get_carbon_score():
+    state = str(request.args.get("state"))
+    county = str(request.args.get("county"))
+    year = int(request.args.get("year"))
+    new_df = pd.DataFrame({"state_code":[state_mapping[state]], "county_code":[county_mapping[county]],  "year":[year]})
+    print(new_df)
+    scaled_val = scaler.fit_transform(new_df)
+    cs = model_map.predict(scaled_val)[0]
+    return jsonify({"Carbon Score":cs, "tax_amount": (cs*4700).round(2) })
+
+@app.route("/getmap")
+def get_map_score():
+    ddict = {'state_code':[],
+        'county_code':[],
+        'year':[]
+    }
+    ddf = pd.DataFrame(ddict)
+    state = str(request.args.get("state"))
+    year = int(request.args.get("year"))
+    state_code = state_mapping[state]
+    #print(county_names['California'])
+    for i in county_names_dict[state]:
+        ddf.loc[len(ddf.index)] = [state_code, county_mapping[i], year]
+    
+    # new_df = pd.DataFrame({"state_code":[state_mapping[state]], "county_code":[county_mapping[county]],  "year":[year]})
+    # print(new_df)
+    scaled_val = scaler.fit_transform(ddf)
+    cs = model_map.predict(scaled_val)
+    print(cs)
+    return jsonify({"Carbon Score":'test' })
+
+# @app.route("/getpollutant")
+# def get_pollutant_score():
+#     # ddict = {'state_code':[],
+#     #     'county_code':[],
+#     #     'year':[]
+#     # }
+#     ddf = pd.DataFrame(ddict)
+#     state = str(request.args.get("state"))
+#     county = str(request.args.get("county"))
+#     year = int(request.args.get("year"))
+#     state_code = state_mapping[state]
+#     new_df = pd.DataFrame({"state_code":[state_mapping[state]], "county_code":[county_mapping[county]],  "year":[year]})
+#     print(new_df)
+#     scaled_val = scaler.fit_transform(ddf)
+#     cs = model_map.predict(scaled_val)
+#     print(cs)
+#     return jsonify({"Carbon Score":'test' })
+
 if __name__ == '__main__':
     connectToMongoCollection()
     init_states()
     init_counties()
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    #ddf = init_full_data()
+    #model_cs, scaler = get_model(ddf)
+    #app.run(host="0.0.0.0")
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
