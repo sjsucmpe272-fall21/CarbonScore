@@ -120,8 +120,7 @@ export default function Dashboard({
     const [lineChartData, setLineChartData] = useState(getDefaultLineChartData())
     const [tableData, setTableChartData] = useState(getDefaultTableData())
     const [mapData, setMapData] = useState(getDefaultMapData(county))
-    console.log(barChartData);
-    console.log(lineChartData);
+
     useEffect(() => {
         let existingCOURL;
         if (county != null) {
