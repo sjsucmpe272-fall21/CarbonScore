@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useEffect} from 'react';
 import { AwesomeButton } from 'react-awesome-button';
 import {useNavigate} from 'react-router-dom';
 
@@ -29,8 +29,12 @@ export default function Landing({
         } else if (item === 'Predict') {
             setMinYear(2022);
         }
-        navigate('location', { state: {result:"abc"} })
+        navigate('location', {})
     }
+
+    useEffect(() => {
+        navigate('/', { replace: true })
+    }, [])
       
     return (
         <div style={backgroundStyle}>

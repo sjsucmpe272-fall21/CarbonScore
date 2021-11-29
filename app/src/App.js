@@ -88,6 +88,16 @@ function App() {
               />
             } 
           />
+          <Route 
+            path="*" 
+            element={
+              <Landing
+                setMaxYear={setMaxYear} 
+                setMinYear={setMinYear}
+                setProcess={setProcess}
+              />
+            } 
+          />
         </Routes>
       </BrowserRouter>
   );
