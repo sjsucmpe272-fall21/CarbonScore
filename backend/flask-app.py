@@ -64,6 +64,48 @@ def get_state_CO_level():
     monthly_levels = result['CO_monthly']
     return jsonify(monthly_levels)
 
+@app.route("/existing_CO_score_county")
+def get_county_CO_score():
+    county = request.args.get("county")
+    year = int(request.args.get("year"))
+    counties_collection = db['county_CO_year_agg']
+    find_str = {'county': county, 'year':  year}
+    result = counties_collection.find_one(find_str)
+    score = round(result['mean'], 3)
+    return jsonify(score)
+
+@app.route("/existing_CO_tax_county")
+def get_county_CO_tax():
+    county = request.args.get("county")
+    year = int(request.args.get("year"))
+    counties_collection = db['county_CO_year_agg']
+    find_str = {'county': county, 'year': year}
+    result = counties_collection.find_one(find_str)
+    score = round(result['mean'], 3)
+    tax = round((score * 4700), 2)
+    return jsonify(tax)
+
+@app.route("/existing_CO_score_state")
+def get_state_CO_score():
+    state = request.args.get("state")
+    year = int(request.args.get("year"))
+    states_collection = db['state_CO_year_agg']
+    find_str = {'state': state, 'year':  year}
+    result = states_collection.find_one(find_str)
+    score = round(result['mean'], 3)
+    return jsonify(score)
+
+@app.route("/existing_CO_tax_state")
+def get_state_CO_tax():
+    state = request.args.get("state")
+    year = int(request.args.get("year"))
+    states_collection = db['state_CO_year_agg']
+    find_str = {'state': state, 'year': year}
+    result = states_collection.find_one(find_str)
+    score = round(result['mean'], 3)
+    tax = round((score * 4700), 2)
+    return jsonify(tax)
+
 @app.route("/s3")
 def test_s3():
     bucket = 'elasticbeanstalk-us-west-1-647979114575'
