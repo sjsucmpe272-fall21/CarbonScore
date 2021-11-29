@@ -1,3 +1,6 @@
 flask
 pymongo
 pymongo[srv]
+flask-cors
+boto3
+pandas
