@@ -77,12 +77,14 @@ function App() {
           <Route
             path="dashboard" 
             element={
-              <Dashboard 
+              <Dashboard
                 county={selectCounty}
                 setYear={setYear}
                 year={year}
                 maxYear={maxYear}
                 minYear={minYear}
+                processOption={process}
+                state={selectState}
               />
             } 
           />

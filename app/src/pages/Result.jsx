@@ -19,11 +19,12 @@ export default function Result({
         // Call backend to get results and pass as param
         navigate('../dashboard', { state: {result:"abc"}, replace: false })
     }
+
+    const locationInfo = ((selectCounty != null) ? selectCounty + ', ' : '') + ((selectState != null) ? selectState : '')
     const headerInfo = year != null ? 
-        (process === 'Predict' ? 'Predicted Carbon Score for the year ' + year.toString() : 'Existing Carbon Score for the year ' + year.toString()) 
+        ((process === 'Predict' ? 'Predicted Carbon Score for the year ' + year.toString() : 'Existing Carbon Score for the year ' + year.toString()) + ' in ' + locationInfo) 
         : 'Carbon Score'
 
-    const locationInfo = ((selectState != null) ?  selectState : '') + ((selectCounty != null) ?  ', ' + selectCounty : '') + ((year != null) ? ', ' + year.toString() : '')
 
     useEffect(() => {
         fetch(
@@ -46,13 +47,12 @@ export default function Result({
                 <p>
                     {headerInfo}
                 </p>
-                <p>
+                <h1>
                     {score}
-                </p>
+                </h1>
             </header>
             <div>
                 <h2>{'$' + tax}</h2>
-                <h3>{locationInfo}</h3>
             </div>
             <br />
             <AwesomeButton onPress={handleGetData}>Dashboard</AwesomeButton>

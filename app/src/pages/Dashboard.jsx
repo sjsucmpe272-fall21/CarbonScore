@@ -3,7 +3,7 @@ import { useLocation } from 'react-router';
 import { backgroundStyle } from './Landing'
 import Plot from 'react-plotly.js';
 
-const plotWrapper = {
+const plotWrapperForExisting = {
     display: 'grid',
     gridTemplateColumns: 'repeat(3,1fr)',
     gridAutoRows: 300,
@@ -11,24 +11,12 @@ const plotWrapper = {
     gap: 20,
 };
 
-const box1 = {
-    gridColumn: 1,
-    gridRow: 1
-};
-
-const box2 = {
-    gridColumn: 2,
-    gridRow: 1
-};
-
-const box3 = {
-    gridColumn: 3,
-    gridRow: 1/3
-};
-
-const box4 = {
-    gridColumn: 3,
-    gridRow: 2/3
+const plotWrapperForPredict = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2,1fr)',
+    gridAutoRows: 300,
+    gridAutoFlow: 'column',
+    gap: 20,
 };
 
 const getDefaultBarChartData = () => {
@@ -120,7 +108,9 @@ export default function Dashboard({
     county,
     maxYear,
     minYear,
+    processOption,
     setYear,
+    state,
     year,
 }) {
     let location = useLocation();
@@ -132,18 +122,42 @@ export default function Dashboard({
     const [mapData, setMapData] = useState(getDefaultMapData(county))
 
     useEffect(() => {
-        fetch("http://carbon-score.us-west-1.elasticbeanstalk.com/barChartData" + (county != null && county != '' ? `?county=${county}` : ''))
+        let existingCOURL;
+        if (county != null) {
+            existingCOURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_county" + (county != null && county != '' ? `&county=${county}` : '')
+        } else if (state != null) {
+            existingCOURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_state" + (state != null && state != '' ? `?state=${state}` : '')
+        } else {
+            console.err('There is an error with the URL used to query data for the dashboard');
+        }
+        existingCOURL += (year != null && year != '' ? `&year=${year}` : '')
+
+        fetch(existingCOURL)
         .then(response => {
           response.json().then(data => {
-            setBarChartData(data)
+            setBarChartData(
+                [{
+                    x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    y: data.map(item => Math.floor(item * 100)),
+                    type: 'bar',
+                    name: 'Carbon'
+                }]
+            )
           })
         })
         .catch(err => console.log(err))
 
-        fetch("http://carbon-score.us-west-1.elasticbeanstalk.com/lineChartData" + (county != null && county != '' ? `?county=${county}` : ''))
+        fetch(existingCOURL)
         .then(response => {
           response.json().then(data => {
-            setLineChartData(data)
+            setLineChartData(
+                [{
+                    x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    y: data.map(item => Math.floor(item * 100)),
+                    type: 'scatter',
+                    name: 'Carbon'
+                }]
+            )
           })
         })
         .catch(err => console.log(err))
@@ -174,46 +188,85 @@ export default function Dashboard({
             </header>
             <h1>
                 {year == null ? minYear : year}
+                    
             </h1>
-            <div>
-                <input type="range" placeholder={year} min={minYear} max={maxYear} onChange={(e) => setYear(e.target.value)} value={year}/>
-            </div>
-            <div class="plot-wrapper" style={plotWrapper}>
-                <div class="box1" style={box1}>
-                    <Plot
-                        config={config}
-                        data={tableData}
-                        layout={ {width: 400, height: 620, plot_bgcolor:"black",paper_bgcolor:"#21242B"} }
-                    />
+            {
+                processOption === 'Existing' && 
+                <div>
+                    <input type="range" placeholder={year} min={minYear} max={maxYear} onChange={(e) => setYear(e.target.value)} value={year}/>
                 </div>
-                <div class="box2" style={box2}>
-                    <Plot
-                        config={config}
-                        data={mapData}
-                        layout={ 
-                            { 
-                              mapbox: 
-                                { style: "dark", center: {lon: -110, lat: 50}, zoom: 0.8}, width: 600, height: 620, margin: {t: 0, b: 0},
-                              plot_bgcolor:"black",paper_bgcolor:"#21242B"
-                            } 
-                        }
-                    />
+            }
+            {
+                processOption === 'Existing' && 
+                <div class="plot-wrapper" style={plotWrapperForExisting}>
+                    <div class="box1" style={{ gridColumn: 1, gridRow: 1 }}>
+                        <Plot
+                            config={config}
+                            data={tableData}
+                            layout={ {width: 400, height: 620, plot_bgcolor:"black",paper_bgcolor:"#21242B"} }
+                        />
+                    </div>
+                    <div class="box2" style={{ gridColumn: 2, gridRow: 1 }}>
+                        <Plot
+                            config={config}
+                            data={mapData}
+                            layout={ 
+                                { 
+                                mapbox: 
+                                    { style: "dark", center: {lon: -110, lat: 50}, zoom: 0.8}, width: 600, height: 620, margin: {t: 0, b: 0},
+                                plot_bgcolor:"black",paper_bgcolor:"#21242B"
+                                } 
+                            }
+                        />
+                    </div>
+                    <div class="box3" style={{ gridColumn: 3, gridRow: 1/3 }}>
+                        <Plot
+                            config={config}
+                            data={lineChartData}
+                            layout={ {width: 500, height: 300, plot_bgcolor:"black",paper_bgcolor:"#21242B"} }
+                        />
+                    </div>
+                    <div class="box4" style={{ gridColumn: 3, gridRow: 2/3 }}>
+                        <Plot
+                            config={config}
+                            data={barChartData}
+                            layout={ {barmode: 'group', title: 'Annual Breakdown', width: 500, height: 300, plot_bgcolor:"black",paper_bgcolor:"#21242B"} }
+                        />
+                    </div>
                 </div>
-                <div class="box3" style={box3}>
-                    <Plot
-                        config={config}
-                        data={lineChartData}
-                        layout={ {width: 500, height: 300, plot_bgcolor:"black",paper_bgcolor:"#21242B"} }
-                    />
+            }
+            {
+                processOption === 'Predict' && 
+                <div class="plot-wrapper" style={plotWrapperForPredict}>
+                    <div class="box1" style={{ gridColumn: 1, gridRow: 1 }}>
+                        <Plot
+                            config={config}
+                            data={mapData}
+                            layout={ 
+                                { 
+                                mapbox: 
+                                    { style: "dark", center: {lon: -110, lat: 50}, zoom: 0.8}, width: 600, height: 620, margin: {t: 0, b: 0},
+                                plot_bgcolor:"black",paper_bgcolor:"#21242B"
+                                } 
+                            }
+                        />
+                    </div>
+                    <div class="box2" style={{ gridColumn: 2, gridRow: 1/3 }}>
+                        <Plot
+                            config={config}
+                            data={lineChartData}
+                            layout={ {width: 500, height: 300, plot_bgcolor:"black",paper_bgcolor:"#21242B"} }
+                        />
+                    </div>
+                    <div class="box3" style={{ gridColumn: 2, gridRow: 2/3 }}>
+                        <Plot
+                            config={config}
+                            data={barChartData}
+                            layout={ {barmode: 'group', title: 'Annual Breakdown', width: 500, height: 300, plot_bgcolor:"black",paper_bgcolor:"#21242B"} }
+                        />
+                    </div>
                 </div>
-                <div class="box4" style={box4}>
-                    <Plot
-                        config={config}
-                        data={barChartData}
-                        layout={ {barmode: 'group', title: 'Annual Breakdown', width: 500, height: 300, plot_bgcolor:"black",paper_bgcolor:"#21242B"} }
-                    />
-                </div>
-            </div>
+            }
         </div>
     )
 }
