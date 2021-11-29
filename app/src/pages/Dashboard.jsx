@@ -66,11 +66,11 @@ const getDefaultTableData = () => {
         columnorder: [1,2],
         columnwidth: [100,200],
         header: {
-        values: [["<b>EXPENSES</b><br>as of July 2017"], ["<b>DESCRIPTION</b>"]],
+        values: [["<b>Name</b>"], ["<b>DESCRIPTION</b>"]],
         align: ["left", "center"],
         height: 40,
         line: {width: 1, color: '#506784'},
-        fill: {color: '#119DFF'},
+        fill: {color: '#1d2026'},
         font: {family: "Arial", size: 12, color: "white"}
         },
         cells: {
@@ -78,7 +78,7 @@ const getDefaultTableData = () => {
         align: ["left", "center"],
         height: 30,
         line: {color: "#506784", width: 1},
-        fill: {color: ['#25FEFD', 'white']},
+        fill: {color: ['#282c34', 'white']},
         font: {family: "Arial", size: 11, color: ["#506784"]}
         }
     }]
@@ -245,7 +245,7 @@ export default function Dashboard({
                             layout={ 
                                 { 
                                 mapbox: 
-                                    { style: "dark", center: {lon: -110, lat: 50}, zoom: 0.8}, width: 600, height: 620, margin: {t: 0, b: 0},
+                                    { style: "dark", center: {lon: -110, lat: 50}, zoom: 0.8}, width: 800, height: 620, margin: {t: 0, b: 0},
                                 plot_bgcolor:"black",paper_bgcolor:"#21242B"
                                 } 
                             }
