@@ -11,3 +11,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # tell the port number the container should expose
 EXPOSE 5000
+
+CMD ["python", "./flask-app.py", "--user", "owner-user", "--pwd", "carbonscore"]

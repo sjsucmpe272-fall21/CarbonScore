@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 import os
 from pymongo import MongoClient
 import argparse
@@ -13,7 +14,7 @@ import pickle
 from mapping import *
 
 app = Flask(__name__)
-# TODO store state names and county names in memory?
+CORS(app)
 state_names = []
 county_names = []
 offset_interval = 80000
@@ -28,68 +29,25 @@ model_poll = pickle.load(open(pollp, 'rb'))
 print("Training Model Loaded!!")
 scaler = MinMaxScaler()
 
-
-
 def connectToMongoCollection():
     # mongo_client = MongoClient("mongodb://localhost:27017/")
     # mongodb://user:password@server:port/
     parser = argparse.ArgumentParser()
-    #parser.add_argument('--ip', help='IP address of MongoDB server')
     parser.add_argument('--user', help='MongoDB server username', required=True)
     parser.add_argument('--pwd', help='MongoDB server password', required=True)
-    #parser.add_argument('--port', help='MongoDB server port number')
     args = parser.parse_args()
-    '''connect_uri = ""
-    if args.user and args.pwd:
-        connect_uri = "mongodb://" + args.user+":"+args.pwd+"@"+args.ip
-    else:
-        connect_uri = "mongodb://" + args.ip
-    if args.port:
-        connect_uri = connect_uri + ":"+args.port+"/"
-    else:
-        connect_uri = connect_uri + ":27017/"'''
     connect_uri = "mongodb+srv://" + args.user + ":" + args.pwd + "@cluster0.tqbki.mongodb.net/carbonScore?retryWrites=true&w=majority"
     mongo_client = MongoClient(connect_uri)
     global db
     db = mongo_client["carbonScore"]
 
 def init_states():
-    '''offset = 0
-    names_list = []
-    while offset < row_count:
-        query_string = """SELECT DISTINCT state_name FROM `bigquery-public-data.epa_historical_air_quality.co_daily_summary`
-            LIMIT 80000 OFFSET """ + str(offset)
-        names = (bqclient.query(query_string).result().to_dataframe(create_bqstorage_client=True, ))
-        names_list.append(names)
-        offset += offset_interval
-
-    df = pd.concat(names_list, ignore_index=True)
-    names_ndarray = df['state_name'].unique()
-    global state_names
-    state_names = names_ndarray.tolist()'''
     states_collection = db["states"]
     result = list(states_collection.find())
     for item in result:
         state_names.append(item['state'])
 
 def init_counties():
-    # state = request.args.get('state')
-    # enforces state query param to be passed
-    # state = request.args['state']
-    '''state = 'California'
-    offset = 0
-    names = []
-    while offset < row_count:
-        query_string = """SELECT DISTINCT county_name FROM `bigquery-public-data.epa_historical_air_quality.co_daily_summary`
-            WHERE state_name='""" + state + """' LIMIT 80000 OFFSET """ + str(offset)
-        names_df = (bqclient.query(query_string).result().to_dataframe(create_bqstorage_client=True, ))
-        names.append(names_df)
-        offset += offset_interval
-
-    df = pd.concat(names, ignore_index=True)
-    names_ndarray = df['county_name'].unique()
-    global county_names
-    county_names = names_ndarray.tolist()'''
     counties_collection = db['counties']
     result = list(counties_collection.find())
     for item in result:
@@ -125,26 +83,6 @@ def get_model(df):
     print("MSE: ", mean_squared_error(pred, test_y))
     return xg, scaler
 
-def test_state_insert():
-    df = ['hello-state','hg33','sahee']
-    mongo_dict_list = []
-    states_collection = db["states"]
-    for item in df:
-        temp_dict = {"state": item}
-        mongo_dict_list.append(temp_dict)
-    states_collection.insert_many(mongo_dict_list)
-
-def test_county_insert():
-    df = [['Peoria', 'Illinois'],
-     ['McCracken', 'Kentucky'],
-     ['Hampden', 'Massachusetts']]
-    mongo_dict_list = []
-    counties_collection = db['counties']
-    for item in df:
-        temp_dict = {"county": item[0], "state": item[1]}
-        mongo_dict_list.append(temp_dict)
-    counties_collection.insert_many(mongo_dict_list)
-
 @app.route("/states")
 def get_states():
     return jsonify(state_names)
@@ -152,6 +90,125 @@ def get_states():
 @app.route("/counties")
 def get_counties():
     return jsonify(county_names)
+
+@app.route("/existing_CO_county")
+def get_county_CO_level():
+    county = request.args.get("county")
+    year = int(request.args.get("year"))
+    counties_collection = db['countywise_CO_yearly']
+    find_str = {'county': county, 'year':  year}
+    result = counties_collection.find_one(find_str)
+    monthly_levels = result['CO_monthly']
+    return jsonify(monthly_levels)
+
+@app.route("/existing_CO_state")
+def get_state_CO_level():
+    state = request.args.get("state")
+    year = int(request.args.get("year"))
+    states_collection = db['statewise_CO_yearly']
+    find_str = {'state': state, 'year': year}
+    result = states_collection.find_one(find_str)
+    monthly_levels = result['CO_monthly']
+    return jsonify(monthly_levels)
+
+@app.route("/existing_CO_score_county")
+def get_county_CO_score():
+    county = request.args.get("county")
+    year = int(request.args.get("year"))
+    counties_collection = db['county_CO_year_agg']
+    find_str = {'county': county, 'year':  year}
+    result = counties_collection.find_one(find_str)
+    score = round(result['mean'], 3)
+    return jsonify(score)
+
+@app.route("/existing_CO_tax_county")
+def get_county_CO_tax():
+    county = request.args.get("county")
+    year = int(request.args.get("year"))
+    counties_collection = db['county_CO_year_agg']
+    find_str = {'county': county, 'year': year}
+    result = counties_collection.find_one(find_str)
+    score = round(result['mean'], 3)
+    tax = round((score * 4700), 2)
+    return jsonify(tax)
+
+@app.route("/existing_CO_score_state")
+def get_state_CO_score():
+    state = request.args.get("state")
+    year = int(request.args.get("year"))
+    states_collection = db['state_CO_year_agg']
+    find_str = {'state': state, 'year':  year}
+    result = states_collection.find_one(find_str)
+    score = round(result['mean'], 3)
+    return jsonify(score)
+
+@app.route("/existing_CO_tax_state")
+def get_state_CO_tax():
+    state = request.args.get("state")
+    year = int(request.args.get("year"))
+    states_collection = db['state_CO_year_agg']
+    find_str = {'state': state, 'year': year}
+    result = states_collection.find_one(find_str)
+    score = round(result['mean'], 3)
+    tax = round((score * 4700), 2)
+    return jsonify(tax)
+
+@app.route("/s3")
+def test_s3():
+    bucket = 'elasticbeanstalk-us-west-1-647979114575'
+    file = 'states-counties.csv'
+    try:
+        import boto3
+        import pandas as pd
+        print('hello testing env values')
+        print(os.environ['AWS_ACCESS_KEY_ID'])
+        print(os.environ['AWS_SECRET_ACCESS_KEY'])
+        s3_client = boto3.client('s3')
+        '''s3_client = boto3.client(
+            "s3",
+            aws_access_key_id='',
+            aws_secret_access_key=''
+        )'''
+        response = s3_client.get_object(Bucket=bucket, Key=file)
+        status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+
+        if status == 200:
+            # print(f"Successful S3 get_object response. Status - {status}")
+            states_df = pd.read_csv(response.get("Body"))
+            df_head = states_df.head()
+            return jsonify(df_head.values.tolist())
+        else:
+            return jsonify(f"Unsuccessful S3 get_object response. Status - {status}")
+    except Exception as e:
+        return jsonify(str(e))
+
+@app.route("/s3-test")
+def test_s3_small():
+    bucket = 'elasticbeanstalk-us-west-1-647979114575'
+    file = 'test-csv.csv'
+    try:
+        import boto3
+        import pandas as pd
+        print('hello testing env values')
+        print(os.environ['AWS_ACCESS_KEY_ID'])
+        print(os.environ['AWS_SECRET_ACCESS_KEY'])
+        s3_client = boto3.client('s3')
+        '''s3_client = boto3.client(
+            "s3",
+            aws_access_key_id='',
+            aws_secret_access_key=''
+        )'''
+        response = s3_client.get_object(Bucket=bucket, Key=file)
+        status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+
+        if status == 200:
+            # print(f"Successful S3 get_object response. Status - {status}")
+            test_str = pd.read_csv(response.get("Body"))
+            return jsonify(test_str.head().values.tolist())
+        else:
+            return jsonify(f"Unsuccessful S3 get_object response. Status - {status}")
+    except Exception as e:
+        return jsonify(str(e))
 
 @app.route("/getscore")
 def get_carbon_score():
@@ -202,15 +259,13 @@ def get_map_score():
 #     cs = model_map.predict(scaled_val)
 #     print(cs)
 #     return jsonify({"Carbon Score":'test' })
-    
 
 if __name__ == '__main__':
     connectToMongoCollection()
     init_states()
     init_counties()
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
     #ddf = init_full_data()
     #model_cs, scaler = get_model(ddf)
     #app.run(host="0.0.0.0")
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-    #test_state_insert()
-    #test_county_insert()
