@@ -83,6 +83,7 @@ function App() {
                 year={year}
                 maxYear={maxYear}
                 minYear={minYear}
+                processOption={process}
               />
             } 
           />
