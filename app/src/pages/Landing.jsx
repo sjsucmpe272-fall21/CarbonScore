@@ -15,27 +15,12 @@ export const backgroundStyle = {
   };
 
 export default function Landing({
-    maxYear,
-    minYear,
     setMaxYear,
     setMinYear,
     setProcess,
-    setYear,
-    selectState, 
-    setSelectState,
-    selectCounty, 
-    year
 }) {
 
-    let navigate = useNavigate();
-
-    const [headerContent, setHeaderContent] = useState()
-    const [bodyContent, setBodyContent] = useState();
-
-    const handleGetData = () => {
-        // Call backend to get results and pass as param
-        navigate('result', { state: {result:"abc"} })
-    }
+    let navigate = useNavigate()
     
     const handleProcess = (item) => {
         setProcess(item);

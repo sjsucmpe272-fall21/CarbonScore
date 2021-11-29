@@ -28,13 +28,9 @@ const fetchInit = {
   };
   
 export default function LocationForm({
-  minYear,
-  selectCounty,
   selectState,
   setSelectCounty,
   setSelectState,
-  setMyCoordinates,
-  year, 
 }) {
     const [address, setAddress] = useState('');
     const [map, setMap] = useState({});

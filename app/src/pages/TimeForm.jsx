@@ -38,7 +38,7 @@ export default function LocationForm({
                 <input type="range" placeholder={year} min={minYear} max={maxYear} onChange={(e) => setYear(e.target.value)}/>
                 <br />
                 <br />
-                <AwesomeButton onPress={() => { setYear(minYear); navigate('../result', { state: {},replace: false }) }}> Get Data </AwesomeButton>
+                <AwesomeButton onPress={() => { navigate('../result', { state: {},replace: false }) }}> Get Data </AwesomeButton>
             </div>
         </div> 
     );

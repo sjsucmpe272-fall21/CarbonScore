@@ -36,17 +36,9 @@ function App() {
             path="/" 
             element={
               <Landing
-                maxYear={maxYear}
-                minYear={minYear}
-                process={process}
                 setMaxYear={setMaxYear} 
                 setMinYear={setMinYear}
                 setProcess={setProcess}
-                setYear={setYear}
-                selectState={selectState}
-                setSelectState={setSelectState}
-                selectCounty={selectCounty}
-                year={year}
               />
             } 
           />
@@ -54,12 +46,9 @@ function App() {
             path="location" 
             element={
               <LocationForm
-                minYear={minYear}
                 selectState={selectState}
                 setSelectState={setSelectState}
-                selectCounty={selectCounty}
                 setSelectCounty={setSelectCounty}
-                year={year}
               /> 
             } 
           />
@@ -78,7 +67,6 @@ function App() {
             path="result" 
             element={
               <Result 
-                minYear={minYear} 
                 process={process} 
                 selectCounty={selectCounty}
                 selectState={selectState}
@@ -86,7 +74,18 @@ function App() {
               />
             } 
           />
-          <Route path="dashboard" element={<Dashboard county={selectCounty}/>} />
+          <Route
+            path="dashboard" 
+            element={
+              <Dashboard 
+                county={selectCounty}
+                setYear={setYear}
+                year={year}
+                maxYear={maxYear}
+                minYear={minYear}
+              />
+            } 
+          />
         </Routes>
       </BrowserRouter>
   );

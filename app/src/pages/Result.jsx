@@ -5,8 +5,6 @@ import { backgroundStyle } from './Landing'
 import {useNavigate} from 'react-router-dom';
 
 export default function Result({
-    maxYear, 
-    minYear, 
     process, 
     year,
     selectCounty,
