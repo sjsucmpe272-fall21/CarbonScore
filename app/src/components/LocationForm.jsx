@@ -1,5 +1,7 @@
 import React, {useState, useEffect} from 'react'
 import { AwesomeButton } from 'react-awesome-button';
+import {useNavigate} from 'react-router-dom';
+import { backgroundStyle } from '../pages/Landing'
 
 const addressInput = {
     display: "flex",
@@ -25,18 +27,21 @@ const fetchInit = {
     },
   };
   
-export default function LocationForm({setMyCoordinates, loadTimeData}) {
+export default function LocationForm({
+  selectState,
+  setSelectCounty,
+  setSelectState,
+}) {
     const [address, setAddress] = useState('');
-    const [selectState, setSelectState] = useState("");
-    const [selectCounty, setSelectCounty] = useState("");
     const [map, setMap] = useState({});
+    let navigate = useNavigate();
 
-    const getSearchUrl = (address,format,polygon,addressDetails)=>{
-        format = format != null ? format : 'json';
-        polygon = polygon != null ?  polygon : '1';
-        addressDetails = addressDetails != null ? addressDetails : '1';
-        return (openStreetMapSearchUrl + '?format='+format+'&q=' + address + '&polygon=' + polygon + '&addressdetails='+addressDetails).replace(/\s/g, '+');
-    };
+    // const getSearchUrl = (address,format,polygon,addressDetails)=>{
+    //     format = format != null ? format : 'json';
+    //     polygon = polygon != null ?  polygon : '1';
+    //     addressDetails = addressDetails != null ? addressDetails : '1';
+    //     return (openStreetMapSearchUrl + '?format='+format+'&q=' + address + '&polygon=' + polygon + '&addressdetails='+addressDetails).replace(/\s/g, '+');
+    // };
 
     useEffect(() => {
       fetch( "http://carbon-score.us-west-1.elasticbeanstalk.com/counties")
@@ -50,6 +55,7 @@ export default function LocationForm({setMyCoordinates, loadTimeData}) {
             stateCounty[state] = stateCounty[state] || [];
             stateCounty[state].push(county);
           })
+          setSelectState(Object.keys(stateCounty)[0]);
           setMap(stateCounty)
         })
       })
@@ -87,41 +93,58 @@ export default function LocationForm({setMyCoordinates, loadTimeData}) {
         }
       };*/
 
-      const onAddressInputFieldChange = (e) => {
-        setAddress(e.target.value);
-      };
+      // const onAddressInputFieldChange = (e) => {
+      //   setAddress(e.target.value);
+      // };
 
-    return (
-
-        <div>
-            <div style={addressInput}> 
-            <label  style={addressLabel}>States:</label>
-            <select placeholder="enter state" name="states" defaultChecked={false} style={{width:"150px"}}
-            onChange={(e)=> setSelectState(e.target.value)}>
-              {map && (Object.keys(map)).map((item) => {
-                console.log(item)
-                return <option value={item}>{item}</option>
-              })}
-            </select>
-              {/* <label for="address" style={addressLabel}>Address:</label>
-              <input type="address" name="address" onChange={onAddressInputFieldChange} placeholder="1234 Maple Dr. Mushroom City, CA 12345" /> */}
+      return (
+        <div style={backgroundStyle}>
+            <header>
+                <p>
+                    {"Please select the State/County for which you want to check the Carbon Score"}
+                </p>
+            </header>
+            <div>
+                <div style={addressInput}> 
+                <label  style={addressLabel}>States:</label>
+                <select 
+                  placeholder="enter state" 
+                  name="states" 
+                  defaultChecked={false} 
+                  style={{width:"150px"}}
+                  onChange={(e)=> setSelectState(e.target.value)}
+                >
+                  {map != null && (Object.keys(map)).map((item, idx) => {
+                    return <option key={`state_${idx}`} value={item}>{item}</option>
+                  })}
+                </select>
+                  {/* <label for="address" style={addressLabel}>Address:</label>
+                  <input type="address" name="address" onChange={onAddressInputFieldChange} placeholder="1234 Maple Dr. Mushroom City, CA 12345" /> */}
+                </div>
+                {
+                  <div style={addressInput}>
+                    <label  style={addressLabel}>County:</label>
+                    <select 
+                      placeholder="enter county" 
+                      name="counties" 
+                      style={{width:"150px"}}
+                      onChange={(e)=> setSelectCounty(e.target.value)}
+                    >
+                      <option value=""/>
+                      {map != null && map[selectState] != null && map[selectState].map((item,idx) => {
+                        return <option key={`county_${idx}`} value={item}>{item}</option>
+                      })}
+                    </select>
+                  </div>
+                }
+                <AwesomeButton
+                  type="primary"
+                  onPress={() => { navigate('../time', { state: {result:"abc"}, replace: false }) }}
+                >
+                  Submit
+                </AwesomeButton>
             </div>
-            {selectState.length > 0 && <div style={addressInput}>
-              <label  style={addressLabel}>County:</label>
-            <select placeholder="enter state" name="county" style={{width:"150px"}}
-            onSelect={(e)=> setSelectCounty(e.target.value)}>
-              <option value=""/>
-              {map[selectState].map((item) => {
-                return <option value={item}>{item}</option>
-              })}
-            </select>
-            </div>}
-            <AwesomeButton
-              type="primary"
-              onPress={loadTimeData}
-            >
-              Submit
-            </AwesomeButton>
-        </div>
+        </div> 
+
       );
 }
