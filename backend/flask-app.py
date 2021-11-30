@@ -153,6 +153,19 @@ def get_state_CO_tax():
     tax = round((score * 4700), 2)
     return jsonify(tax)
 
+@app.route("/existing_CO_score_cities")
+def get_cities_CO_score():
+    county = request.args.get("county")
+    year = int(request.args.get("year"))
+    cities_collection = db['city_CO_year_agg']
+    find_str = {'county': county, 'year':  year}
+    result = cities_collection.find(find_str)
+    score_list = []
+    for row in result:
+        score = round(row['mean'], 3)
+        score_list.append([row['city'], score])
+    return jsonify(score_list)
+
 @app.route("/s3")
 def test_s3():
     bucket = 'elasticbeanstalk-us-west-1-647979114575'
