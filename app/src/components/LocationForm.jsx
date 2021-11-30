@@ -38,13 +38,6 @@ export default function LocationForm({
   const [map, setMap] = useState({});
   let navigate = useNavigate();
 
-  // const getSearchUrl = (address,format,polygon,addressDetails)=>{
-  //     format = format != null ? format : 'json';
-  //     polygon = polygon != null ?  polygon : '1';
-  //     addressDetails = addressDetails != null ? addressDetails : '1';
-  //     return (openStreetMapSearchUrl + '?format='+format+'&q=' + address + '&polygon=' + polygon + '&addressdetails='+addressDetails).replace(/\s/g, '+');
-  // };
-
   useEffect(() => {
     fetch( "http://carbon-score.us-west-1.elasticbeanstalk.com/counties")
     .then(response => {
