@@ -133,7 +133,6 @@ export default function LocationForm({
                     style={{width:"150px"}}
                     onChange={(e)=> setSelectCounty(e.target.value)}
                   >
-                    <option value=""/>
                     {map != null && map[selectState] != null && map[selectState].map((item,idx) => {
                       return <option key={`county_${idx}`} value={item}>{item}</option>
                     })}
