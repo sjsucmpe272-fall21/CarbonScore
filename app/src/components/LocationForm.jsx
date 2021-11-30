@@ -17,24 +17,13 @@ const addressInput = {
   const addressLabel = {
     marginRight: "10px",
   };
-
-const openStreetMapSearchUrl = 'https://nominatim.openstreetmap.org/search';
-const fetchInit = {
-    method: 'GET', // *GET, POST, PUT, DELETE, etc.
-    cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-    credentials: 'same-origin', // include, *same-origin, omit
-    headers: {
-      'Content-Type': 'application/json'
-      // 'Content-Type': 'application/x-www-form-urlencoded',
-    },
-  };
   
 export default function LocationForm({
   selectState,
   setSelectCounty,
   setSelectState,
 }) {
-  const [address, setAddress] = useState('');
+  
   const [map, setMap] = useState({});
   let navigate = useNavigate();
 
@@ -79,8 +68,7 @@ export default function LocationForm({
                   return <option key={`state_${idx}`} value={item}>{item}</option>
                 })}
               </select>
-                {/* <label for="address" style={addressLabel}>Address:</label>
-                <input type="address" name="address" onChange={onAddressInputFieldChange} placeholder="1234 Maple Dr. Mushroom City, CA 12345" /> */}
+                {}
               </div>
               {
                 <div style={addressInput}>
