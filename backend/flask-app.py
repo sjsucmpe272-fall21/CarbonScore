@@ -182,8 +182,6 @@ def test_s3_small():
     bucket = 'elasticbeanstalk-us-west-1-647979114575'
     file = 'test-csv.csv'
     try:
-        import boto3
-        import pandas as pd
         print('hello testing env values')
         # print(os.environ['AWS_ACCESS_KEY_ID'])
         # print(os.environ['AWS_SECRET_ACCESS_KEY'])
@@ -211,11 +209,12 @@ def get_carbon_score():
     bucket = 'elasticbeanstalk-us-west-1-647979114575'
     file = 'map.pkl'
     try:
-        s3_client = boto3.client(
+        '''s3_client = boto3.client(
             "s3",
-            aws_access_key_id='AKIAZNXUQUBH3NEQ6FYE',
-            aws_secret_access_key='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'
-        )
+            aws_access_key_id='',
+            aws_secret_access_key=''
+        )'''
+        s3_client = boto3.client('s3')
         response = s3_client.get_object(Bucket=bucket, Key=file)
         status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
 
@@ -240,11 +239,12 @@ def get_map_score():
     bucket = 'elasticbeanstalk-us-west-1-647979114575'
     file = 'statemap.pkl'
     try:
-        s3_client = boto3.client(
+        '''s3_client = boto3.client(
             "s3",
-            aws_access_key_id='AKIAZNXUQUBH3NEQ6FYE',
-            aws_secret_access_key='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'
-        )
+            aws_access_key_id='',
+            aws_secret_access_key=''
+        )'''
+        s3_client = boto3.client('s3')
         response = s3_client.get_object(Bucket=bucket, Key=file)
         status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
 
@@ -274,11 +274,12 @@ def get_pollutant_score():
     bucket = 'elasticbeanstalk-us-west-1-647979114575'
     file = 'charts.pkl'
     try:
-        s3_client = boto3.client(
+        '''s3_client = boto3.client(
             "s3",
-            aws_access_key_id='AKIAZNXUQUBH3NEQ6FYE',
-            aws_secret_access_key='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'
-        )
+            aws_access_key_id='',
+            aws_secret_access_key=''
+        )'''
+        s3_client = boto3.client('s3')
         response = s3_client.get_object(Bucket=bucket, Key=file)
         status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
 
@@ -313,11 +314,12 @@ def get_city_score():
     bucket = 'elasticbeanstalk-us-west-1-647979114575'
     file = 'pollutant.pkl'
     try:
-        s3_client = boto3.client(
+        '''s3_client = boto3.client(
             "s3",
-            aws_access_key_id='AKIAZNXUQUBH3NEQ6FYE',
-            aws_secret_access_key='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'
-        )
+            aws_access_key_id='',
+            aws_secret_access_key=''
+        )'''
+        s3_client = boto3.client('s3')
         response = s3_client.get_object(Bucket=bucket, Key=file)
         status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
 
@@ -353,11 +355,12 @@ def get_table_score():
     bucket = 'elasticbeanstalk-us-west-1-647979114575'
     file = 'map.pkl'
     try:
-        s3_client = boto3.client(
+        '''s3_client = boto3.client(
             "s3",
-            aws_access_key_id='AKIAZNXUQUBH3NEQ6FYE',
-            aws_secret_access_key='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'
-        )
+            aws_access_key_id='',
+            aws_secret_access_key=''
+        )'''
+        s3_client = boto3.client('s3')
         response = s3_client.get_object(Bucket=bucket, Key=file)
         status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
 
