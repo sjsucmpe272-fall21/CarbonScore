@@ -57,41 +57,6 @@ export default function LocationForm({
     .catch(err => console.log(err))
   }, [])
 
-  /*const handleSubmit = () => {
-      if (address.trim() === '') {
-        return;
-      }
-      const addressUrl = getSearchUrl(address,null,null,null);
-      try {
-        fetch(addressUrl,fetchInit)
-          .then(response => {
-            response.json().then(data => {
-              if (data == null || data[0] == null) {
-                alert("Sorry we could not find that address!");
-                return 
-              }
-              setMyCoordinates({lat:data[0].lat, lng:data[0].lon, displayName: data[0].display_name});
-            });
-          })
-          .then(result => {
-              loadTimeData();
-            },
-            error => {
-              // TODO: log error
-              console.log('AddressForm');
-              console.log(error);
-            },
-          );
-      } catch (err) {
-        // TODO: log error
-        console.log(err);
-      }
-    };*/
-
-    // const onAddressInputFieldChange = (e) => {
-    //   setAddress(e.target.value);
-    // };
-
     return (
       <div style={backgroundStyle}>
           <header>
