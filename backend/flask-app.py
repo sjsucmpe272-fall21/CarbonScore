@@ -12,6 +12,8 @@ import datetime
 import joblib
 import pickle
 from mapping import *
+import boto3
+
 
 app = Flask(__name__)
 CORS(app)
@@ -23,9 +25,11 @@ model_cs = ""
 mapp = "map.pkl"
 chartp = "charts.pkl"
 pollp = "pollutant.pkl" 
-model_map = pickle.load(open(mapp, 'rb'))
-model_chart = pickle.load(open(chartp, 'rb'))
-model_poll = pickle.load(open(pollp, 'rb'))
+statep = "statemap.pkl"
+# s_map = pickle.load(open(mapp, 'rb'))
+# s_chart = pickle.load(open(chartp, 'rb'))
+# s_poll = pickle.load(open(pollp, 'rb'))
+# s_smap = pickle.load(open(statep, 'rb'))
 print("Training Model Loaded!!")
 scaler = MinMaxScaler()
 
@@ -62,26 +66,6 @@ def init_full_data():
     df["day"] = pd.DatetimeIndex(df['date_local']).day  
     return df
 
-def get_model(df):
-    df_extract = df[["state_code","county_code","site_num", "year","month","day","arithmetic_mean", "parameter_name"]]
-    df_extract["state_code"] = df_extract["state_code"].astype(int)
-    df_extract["county_code"] = df_extract["county_code"].astype(int)
-    df_extract["site_num"] = df_extract["site_num"].astype(int)
-    df_g = df_extract.groupby(["state_code", "county_code","site_num","year","month","day"])["arithmetic_mean"].mean().reset_index()
-    X = df_g.drop(["arithmetic_mean"], axis=1)
-    y = df_g[["arithmetic_mean"]]
-    train_X = X[:1100000]
-    test_X = X[1100000:]
-    train_y = y[:1100000]
-    test_y = y[1100000:]
-    scaler = MinMaxScaler()
-    train_scaled = scaler.fit_transform(train_X)
-    test_scaled = scaler.fit_transform(test_X)
-    xg = xgb.XGBRegressor()
-    xg.fit(train_scaled, train_y)
-    pred = xg.predict(test_scaled)
-    print("MSE: ", mean_squared_error(pred, test_y))
-    return xg, scaler
 
 @app.route("/states")
 def get_states():
@@ -158,8 +142,6 @@ def test_s3():
     bucket = 'elasticbeanstalk-us-west-1-647979114575'
     file = 'states-counties.csv'
     try:
-        import boto3
-        import pandas as pd
         print('hello testing env values')
         print(os.environ['AWS_ACCESS_KEY_ID'])
         print(os.environ['AWS_SECRET_ACCESS_KEY'])
@@ -190,8 +172,8 @@ def test_s3_small():
         import boto3
         import pandas as pd
         print('hello testing env values')
-        print(os.environ['AWS_ACCESS_KEY_ID'])
-        print(os.environ['AWS_SECRET_ACCESS_KEY'])
+        # print(os.environ['AWS_ACCESS_KEY_ID'])
+        # print(os.environ['AWS_SECRET_ACCESS_KEY'])
         s3_client = boto3.client('s3')
         '''s3_client = boto3.client(
             "s3",
@@ -203,6 +185,7 @@ def test_s3_small():
 
         if status == 200:
             # print(f"Successful S3 get_object response. Status - {status}")
+            print(response.get("Body"))
             test_str = pd.read_csv(response.get("Body"))
             return jsonify(test_str.head().values.tolist())
         else:
@@ -210,55 +193,184 @@ def test_s3_small():
     except Exception as e:
         return jsonify(str(e))
 
-@app.route("/getscore")
+@app.route("/getcscore")
 def get_carbon_score():
-    state = str(request.args.get("state"))
-    county = str(request.args.get("county"))
-    year = int(request.args.get("year"))
-    new_df = pd.DataFrame({"state_code":[state_mapping[state]], "county_code":[county_mapping[county]],  "year":[year]})
-    print(new_df)
-    scaled_val = scaler.fit_transform(new_df)
-    cs = model_map.predict(scaled_val)[0]
-    return jsonify({"Carbon Score":cs, "tax_amount": (cs*4700).round(2) })
+    bucket = 'elasticbeanstalk-us-west-1-647979114575'
+    file = 'map.pkl'
+    try:
+        s3_client = boto3.client(
+            "s3",
+            aws_access_key_id='AKIAZNXUQUBH3NEQ6FYE',
+            aws_secret_access_key='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'
+        )
+        response = s3_client.get_object(Bucket=bucket, Key=file)
+        status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
 
-@app.route("/getmap")
+        if status == 200:
+            state = str(request.args.get("state"))
+            county = str(request.args.get("county"))
+            year = int(request.args.get("year"))
+            new_df = pd.DataFrame({"state_code":[state_mapping[state]], "county_code":[county_mapping[county]],  "year":[year]})
+            scaled_val = scaler.fit_transform(new_df)
+            model_map = pickle.loads(response.get("Body").read())
+            #model_map = s_map
+            cs = model_map.predict(scaled_val)[0]
+            return jsonify({"Carbon Score":cs, "tax_amount": (cs*4700).round(2) })
+        else:
+            return jsonify(f"Unsuccessful S3 get_object response. Status - {status}")
+    except Exception as e:
+        return jsonify(str(e))
+
+
+@app.route("/getcmap")
 def get_map_score():
-    ddict = {'state_code':[],
-        'county_code':[],
-        'year':[]
-    }
-    ddf = pd.DataFrame(ddict)
-    state = str(request.args.get("state"))
-    year = int(request.args.get("year"))
-    state_code = state_mapping[state]
-    #print(county_names['California'])
-    for i in county_names_dict[state]:
-        ddf.loc[len(ddf.index)] = [state_code, county_mapping[i], year]
-    
-    # new_df = pd.DataFrame({"state_code":[state_mapping[state]], "county_code":[county_mapping[county]],  "year":[year]})
-    # print(new_df)
-    scaled_val = scaler.fit_transform(ddf)
-    cs = model_map.predict(scaled_val)
-    print(cs)
-    return jsonify({"Carbon Score":'test' })
+    bucket = 'elasticbeanstalk-us-west-1-647979114575'
+    file = 'statemap.pkl'
+    try:
+        s3_client = boto3.client(
+            "s3",
+            aws_access_key_id='AKIAZNXUQUBH3NEQ6FYE',
+            aws_secret_access_key='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'
+        )
+        response = s3_client.get_object(Bucket=bucket, Key=file)
+        status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
 
-# @app.route("/getpollutant")
-# def get_pollutant_score():
-#     # ddict = {'state_code':[],
-#     #     'county_code':[],
-#     #     'year':[]
-#     # }
-#     ddf = pd.DataFrame(ddict)
-#     state = str(request.args.get("state"))
-#     county = str(request.args.get("county"))
-#     year = int(request.args.get("year"))
-#     state_code = state_mapping[state]
-#     new_df = pd.DataFrame({"state_code":[state_mapping[state]], "county_code":[county_mapping[county]],  "year":[year]})
-#     print(new_df)
-#     scaled_val = scaler.fit_transform(ddf)
-#     cs = model_map.predict(scaled_val)
-#     print(cs)
-#     return jsonify({"Carbon Score":'test' })
+        if status == 200:
+            ddict = {'state_code':[],
+                'year':[]
+            }
+            ddf = pd.DataFrame(ddict)
+            year = int(request.args.get("year"))
+            op = []
+            for i in list(state_abb.keys()):
+                if(i in list(state_mapping.keys())):
+                    ddf.loc[len(ddf.index)] = [state_mapping[i],  year]
+                    op.append(state_abb[i])
+            model_map = pickle.loads(response.get("Body").read())
+            scaled_val = scaler.fit_transform(ddf)
+            #model_map = s_smap
+            cs = model_map.predict(scaled_val)
+            return jsonify({"state":op, "carbon_score":list(cs)})
+        else:
+            return jsonify(f"Unsuccessful S3 get_object response. Status - {status}")
+    except Exception as e:
+        return jsonify(str(e))
+
+@app.route("/getpchart")
+def get_pollutant_score():
+    bucket = 'elasticbeanstalk-us-west-1-647979114575'
+    file = 'charts.pkl'
+    try:
+        s3_client = boto3.client(
+            "s3",
+            aws_access_key_id='AKIAZNXUQUBH3NEQ6FYE',
+            aws_secret_access_key='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'
+        )
+        response = s3_client.get_object(Bucket=bucket, Key=file)
+        status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+
+        if status == 200:
+            ddict = {'state_code':[],
+                'county_code':[],
+                'year':[],
+                'month' : []
+            }
+            ddf = pd.DataFrame(ddict)
+            state = str(request.args.get("state"))
+            year = int(request.args.get("year"))
+            county = str(request.args.get("county"))
+            state_code = state_mapping[state]
+            county_code = county_mapping[county]
+            #print(county_names['California'])
+            for i in range(1,13):
+                ddf.loc[len(ddf.index)] = [state_code,county_code , year, i]
+            scaled_val = scaler.fit_transform(ddf)
+            model_chart = pickle.loads(response.get("Body").read())
+            cs = model_chart.predict(scaled_val)
+            cs = [i.round(2) for i in cs]
+            res = {"x":chart_res, "y" :cs}
+            return jsonify(res)
+        else:
+            return jsonify(f"Unsuccessful S3 get_object response. Status - {status}")
+    except Exception as e:
+        return jsonify(str(e))
+
+@app.route("/getcchart")
+def get_city_score():
+    bucket = 'elasticbeanstalk-us-west-1-647979114575'
+    file = 'pollutant.pkl'
+    try:
+        s3_client = boto3.client(
+            "s3",
+            aws_access_key_id='AKIAZNXUQUBH3NEQ6FYE',
+            aws_secret_access_key='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'
+        )
+        response = s3_client.get_object(Bucket=bucket, Key=file)
+        status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+
+        if status == 200:
+            ddict = {'state_code':[],
+                'county_code':[],
+                'year':[],
+                'city_num' : []
+            }
+            ddf = pd.DataFrame(ddict)
+            state = str(request.args.get("state"))
+            year = int(request.args.get("year"))
+            county = str(request.args.get("county"))
+            state_code = state_mapping[state]
+            county_code = county_mapping[county]
+            #print(county_names['California'])
+            for i in city_detail[county]:
+                ddf.loc[len(ddf.index)] = [state_code,county_code , year, city_mapping[i]]
+            scaled_val = scaler.fit_transform(ddf)
+            model_chart = pickle.loads(response.get("Body").read())
+            cs = model_chart.predict(scaled_val)
+            cs = [i.round(2) for i in cs]
+            res = {"x":city_detail[county], "y" :cs}
+            return jsonify(res)
+        else:
+            return jsonify(f"Unsuccessful S3 get_object response. Status - {status}")
+    except Exception as e:
+        return jsonify(str(e))
+
+
+@app.route("/get_table_pred")
+def get_table_score():
+    bucket = 'elasticbeanstalk-us-west-1-647979114575'
+    file = 'map.pkl'
+    try:
+        s3_client = boto3.client(
+            "s3",
+            aws_access_key_id='AKIAZNXUQUBH3NEQ6FYE',
+            aws_secret_access_key='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'
+        )
+        response = s3_client.get_object(Bucket=bucket, Key=file)
+        status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+
+        if status == 200:
+            ddict = {'state_code':[],
+                'county_code':[],
+                'year':[]
+            }
+            ddf = pd.DataFrame(ddict)
+            state = str(request.args.get("state"))
+            year = int(request.args.get("year"))
+            state_code = state_mapping[state]
+            for i in county_names_dict[state]:
+                #print(county_mapping[i])
+                ddf.loc[len(ddf.index)] = [state_code, county_mapping[i], year]
+            scaled_val = scaler.fit_transform(ddf)
+            model_map = pickle.loads(response.get("Body").read())
+            #model_map = s_map
+            cs = model_map.predict(scaled_val)
+            #print(cs)
+            return jsonify({"county":county_names_dict[state], "carbonscore": list(cs)})
+        else:
+            return jsonify(f"Unsuccessful S3 get_object response. Status - {status}")
+    except Exception as e:
+        return jsonify(str(e))
+
 
 if __name__ == '__main__':
     connectToMongoCollection()
@@ -268,4 +380,4 @@ if __name__ == '__main__':
     #ddf = init_full_data()
     #model_cs, scaler = get_model(ddf)
     #app.run(host="0.0.0.0")
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    #app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
