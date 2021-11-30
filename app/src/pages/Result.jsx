@@ -27,15 +27,24 @@ export default function Result({
 
 
     useEffect(() => {
-        fetch(
-            "http://carbon-score.us-west-1.elasticbeanstalk.com/score" + 
-            (selectState != null && selectState != '' ? `?state=${selectState}` : '') +
-            (selectCounty != null && selectCounty != '' ? `&county=${selectCounty}` : '')
-        )
+        const existingCOScoreCounty = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_score_county" +
+            (selectCounty != null && selectCounty != '' ? `?county=${selectCounty}` : '') + 
+            (year != null && year != '' ? `&year=${year}` : '')
+        fetch(existingCOScoreCounty)
         .then(response => {
           response.json().then(data => {
-            setScore(data.score)
-            setTax(data.tax)
+            setScore(data * 1000)
+          })
+        })
+        .catch(err => console.log(err))
+
+        const existingCOTaxCounty = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_tax_county" +
+            (selectCounty != null && selectCounty != '' ? `?county=${selectCounty}` : '') + 
+            (year != null && year != '' ? `&year=${year}` : '')
+        fetch(existingCOTaxCounty)
+        .then(response => {
+          response.json().then(data => {
+            setTax(data)
           })
         })
         .catch(err => console.log(err))

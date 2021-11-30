@@ -119,64 +119,79 @@ export default function Dashboard({
     const [barChartData, setBarChartData] = useState(getDefaultBarChartData())
     const [lineChartData, setLineChartData] = useState(getDefaultLineChartData())
     const [tableData, setTableChartData] = useState(getDefaultTableData())
-    const [mapData, setMapData] = useState(getDefaultMapData(county))
+    const [mapData, setMapData] = useState(getDefaultMapData(null))
 
     useEffect(() => {
-        let existingCOURL;
+        let existingCOCountyURL
+        let existingCOScoreCitiesURL
+        let existingCOtaxCounty
+        let existingCOURL
         if (county != null) {
-            existingCOURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_county" + (county != null && county != '' ? `&county=${county}` : '')
-        } else if (state != null) {
-            existingCOURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_state" + (state != null && state != '' ? `?state=${state}` : '')
-        } else {
-            console.err('There is an error with the URL used to query data for the dashboard');
+            existingCOCountyURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_county" + 
+                (county != null && county != '' ? `?county=${county}` : '') + 
+                (year != null && year != '' ? `&year=${year}` : '')
+            existingCOScoreCitiesURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_score_cities" + 
+                (county != null && county != '' ? `?county=${county}` : '') + 
+                (year != null && year != '' ? `&year=${year}` : '')
+            existingCOtaxCounty = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_tax_county" +
+                (county != null && county != '' ? `?county=${county}` : '') + 
+                (year != null && year != '' ? `&year=${year}` : '')
+        } 
+        if (state != null) {
+            existingCOURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_state" + 
+                (state != null && state != '' ? `?state=${state}` : '') + 
+                (year != null && year != '' ? `&year=${year}` : '')
         }
-        existingCOURL += (year != null && year != '' ? `&year=${year}` : '')
 
-        fetch(existingCOURL)
-        .then(response => {
-          response.json().then(data => {
-            setBarChartData(
-                [{
-                    x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                    y: data.map(item => Math.floor(item * 100)),
-                    type: 'bar',
-                    name: 'Carbon'
-                }]
-            )
-          })
-        })
-        .catch(err => console.log(err))
+        if (processOption === 'Existing') {
+            fetch(existingCOScoreCitiesURL)
+                .then(response => {
+                    response.json().then(data => {
+                        setBarChartData(
+                            [{
+                                x: data.map(city => city[0]),
+                                y: data.map(city => city[1]),
+                                type: 'bar',
+                                name: 'Carbon'
+                            }]
+                        )
+                    })
+                })
+                .catch(err => console.log(err))
 
-        fetch(existingCOURL)
-        .then(response => {
-          response.json().then(data => {
-            setLineChartData(
-                [{
-                    x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                    y: data.map(item => Math.floor(item * 100)),
-                    type: 'scatter',
-                    name: 'Carbon'
-                }]
-            )
-          })
-        })
-        .catch(err => console.log(err))
+            fetch(existingCOCountyURL)
+                .then(response => {
+                    response.json().then(data => {
+                        setLineChartData(
+                            [{
+                                x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                                y: data.map(item => Math.floor(item * 100)),
+                                type: 'scatter',
+                                name: 'Carbon'
+                            }]
+                        )
+                    })
+                })
+                .catch(err => console.log(err))
 
-        fetch("http://carbon-score.us-west-1.elasticbeanstalk.com/tableChartData" + (county != null && county != '' ? `?county=${county}` : ''))
-        .then(response => {
-          response.json().then(data => {
-            setTableChartData(data)
-          })
-        })
-        .catch(err => console.log(err))
+            fetch("http://carbon-score.us-west-1.elasticbeanstalk.com/tableChartData" + (county != null && county != '' ? `?county=${county}` : ''))
+                .then(response => {
+                    response.json().then(data => {
+                        setTableChartData(data)
+                    })
+                })
+                .catch(err => console.log(err))
 
-        fetch("http://carbon-score.us-west-1.elasticbeanstalk.com/mapData" + (county != null && county != '' ? `?county=${county}` : ''))
-        .then(response => {
-          response.json().then(data => {
-            setMapData(data)
-          })
-        })
-        .catch(err => console.log(err))
+            fetch("http://carbon-score.us-west-1.elasticbeanstalk.com/mapData" + (county != null && county != '' ? `?county=${county}` : ''))
+                .then(response => {
+                    response.json().then(data => {
+                        setMapData(data)
+                    })
+                })
+                .catch(err => console.log(err))
+        } else {
+
+        }
       }, [])
 
       return (
