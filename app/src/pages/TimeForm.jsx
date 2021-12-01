@@ -19,16 +19,22 @@ const addressInput = {
 export default function LocationForm({
   minYear,
   maxYear,
+  process,
   setYear,
   year, 
 }) {
     const navigate = useNavigate();
 
+    useEffect(() => {
+        if (process == null) {
+            navigate('../', { state: {result:"abc"}, replace: false }) 
+        }
+    }, []);
     return (
         <div style={backgroundStyle}>
             <header>
                 <p>
-                    {"Please select the State/County for which you want to check the Carbon Score"}
+                    {"Please select the year for which you want to check the Carbon Score"}
                 </p>
             </header>
             <h1>
