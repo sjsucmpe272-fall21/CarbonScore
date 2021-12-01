@@ -200,9 +200,6 @@ export default function Dashboard({
         let existingCOtaxCounty = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_tax_county" +
             (county != null && county != '' ? `?county=${county}` : '') + 
             (year != null && year != '' ? `&year=${year}` : '')
-        let existingCOURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_state" + 
-            (state != null && state != '' ? `?state=${state}` : '') + 
-            (year != null && year != '' ? `&year=${year}` : '')
         let existingCOMapURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_state_map" + 
             (year != null && year != '' ? `?year=${year}` : '')
 
@@ -211,7 +208,7 @@ export default function Dashboard({
                 .then(response => {
                     response.json().then(data => {
                         const cities = data.map(city => city[0])
-                        const scores = data.map(city => city[1])
+                        const scores = data.map(city => city[1]*1000)
                         setBarChartData(
                             [{
                                 x: cities,
@@ -285,12 +282,12 @@ export default function Dashboard({
                 {year == null ? minYear : year}
                     
             </h1>
-            {
+            {/* {
                 processOption === 'Existing' && 
                 <div>
                     <input type="range" placeholder={year} min={minYear} max={maxYear} onChange={(e) => setYear(e.target.value)} value={year}/>
                 </div>
-            }
+            } */}
             {
                 processOption === 'Existing' && 
                 <div class="plot-wrapper" style={plotWrapperForExisting}>
@@ -318,7 +315,7 @@ export default function Dashboard({
                         <Plot
                             config={config}
                             data={lineChartData}
-                            layout={ {width: 500, height: 300, plot_bgcolor:"black",paper_bgcolor:"#21242B"} }
+                            layout={ {width: 500, height: 300, title: 'Annual Breakdown', plot_bgcolor:"black",paper_bgcolor:"#21242B"} }
                         />
                     </div>
                     <div class="box4" style={{ gridColumn: 3, gridRow: 2/3 }}>
@@ -350,14 +347,14 @@ export default function Dashboard({
                         <Plot
                             config={config}
                             data={lineChartData}
-                            layout={ {width: 500, height: 300, plot_bgcolor:"black",paper_bgcolor:"#21242B"} }
+                            layout={ {width: 500, height: 300, title: 'Annual Breakdown', plot_bgcolor:"black",paper_bgcolor:"#21242B"} }
                         />
                     </div>
                     <div class="box3" style={{ gridColumn: 2, gridRow: 2/3 }}>
                         <Plot
                             config={config}
                             data={barChartData}
-                            layout={ {barmode: 'group', title: 'Annual Breakdown', width: 500, height: 300, plot_bgcolor:"black",paper_bgcolor:"#21242B"} }
+                            layout={ {barmode: 'group', title: 'City Breakdown', width: 500, height: 300, plot_bgcolor:"black",paper_bgcolor:"#21242B"} }
                         />
                     </div>
                 </div>

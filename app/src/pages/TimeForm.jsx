@@ -28,7 +28,7 @@ export default function LocationForm({
         <div style={backgroundStyle}>
             <header>
                 <p>
-                    {"Please select the State/County for which you want to check the Carbon Score"}
+                    {"Please select the year for which you want to check the Carbon Score"}
                 </p>
             </header>
             <h1>
