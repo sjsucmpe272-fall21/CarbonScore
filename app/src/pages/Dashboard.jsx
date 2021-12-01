@@ -3,6 +3,78 @@ import { useLocation } from 'react-router';
 import { backgroundStyle } from './Landing'
 import Plot from 'react-plotly.js';
 
+function abbrState(input, to){
+    
+    var states = [
+        ['Arizona', 'AZ'],
+        ['Alabama', 'AL'],
+        ['Alaska', 'AK'],
+        ['Arkansas', 'AR'],
+        ['California', 'CA'],
+        ['Colorado', 'CO'],
+        ['Connecticut', 'CT'],
+        ['Delaware', 'DE'],
+        ['Florida', 'FL'],
+        ['Georgia', 'GA'],
+        ['Hawaii', 'HI'],
+        ['Idaho', 'ID'],
+        ['Illinois', 'IL'],
+        ['Indiana', 'IN'],
+        ['Iowa', 'IA'],
+        ['Kansas', 'KS'],
+        ['Kentucky', 'KY'],
+        ['Louisiana', 'LA'],
+        ['Maine', 'ME'],
+        ['Maryland', 'MD'],
+        ['Massachusetts', 'MA'],
+        ['Michigan', 'MI'],
+        ['Minnesota', 'MN'],
+        ['Mississippi', 'MS'],
+        ['Missouri', 'MO'],
+        ['Montana', 'MT'],
+        ['Nebraska', 'NE'],
+        ['Nevada', 'NV'],
+        ['New Hampshire', 'NH'],
+        ['New Jersey', 'NJ'],
+        ['New Mexico', 'NM'],
+        ['New York', 'NY'],
+        ['North Carolina', 'NC'],
+        ['North Dakota', 'ND'],
+        ['Ohio', 'OH'],
+        ['Oklahoma', 'OK'],
+        ['Oregon', 'OR'],
+        ['Pennsylvania', 'PA'],
+        ['Rhode Island', 'RI'],
+        ['South Carolina', 'SC'],
+        ['South Dakota', 'SD'],
+        ['Tennessee', 'TN'],
+        ['Texas', 'TX'],
+        ['Utah', 'UT'],
+        ['Vermont', 'VT'],
+        ['Virginia', 'VA'],
+        ['Washington', 'WA'],
+        ['West Virginia', 'WV'],
+        ['Wisconsin', 'WI'],
+        ['Wyoming', 'WY'],
+    ];
+
+    if (to == 'abbr'){
+        input = input.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+        for(let i = 0; i < states.length; i++){
+            if(states[i][0] == input){
+                return(states[i][1]);
+            }
+        }    
+    } else if (to == 'name'){
+        input = input.toUpperCase();
+        for(let i = 0; i < states.length; i++){
+            if(states[i][1] == input){
+                return(states[i][0]);
+            }
+        }    
+    }
+}
+
 const plotWrapperForExisting = {
     display: 'grid',
     gridTemplateColumns: 'repeat(3,1fr)',
@@ -86,15 +158,12 @@ const getDefaultTableData = () => {
     return data;
 }
 
-const getDefaultMapData = (county) => {
-    const geoJSONURL = county != null && county != ''
-        ? "https://raw.githubusercontent.com/python-visualization/folium/master/examples/data/us_counties_20m_topo.json"
-        : "https://raw.githubusercontent.com/python-visualization/folium/master/examples/data/us-states.json"
+const getDefaultMapData = () => {
     return [{
         center: [37.354107, -121.955238],
         type: "choroplethmapbox", 
         name: "US states", 
-        geojson: geoJSONURL, 
+        geojson: "https://raw.githubusercontent.com/python-visualization/folium/master/examples/data/us-states.json", 
         locations: [ "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY" ],
         z: [ 141, 140, 155, 147, 132, 146, 151, 137, 146, 136, 145, 141, 149, 151, 138, 158, 164, 141, 146, 145, 142, 150, 155, 160, 156, 161, 147, 164, 150, 152, 155, 167, 145, 146, 151, 154, 161, 145, 155, 150, 151, 162, 172, 169, 170, 151, 152, 173, 160, 176 ],
         zmin: 25, 
@@ -119,7 +188,7 @@ export default function Dashboard({
     const [barChartData, setBarChartData] = useState(getDefaultBarChartData())
     const [lineChartData, setLineChartData] = useState(getDefaultLineChartData())
     const [tableData, setTableChartData] = useState(getDefaultTableData())
-    const [mapData, setMapData] = useState(getDefaultMapData(null))
+    const [mapData, setMapData] = useState(getDefaultMapData())
 
     useEffect(() => {
         let existingCOCountyURL
@@ -182,10 +251,24 @@ export default function Dashboard({
                 })
                 .catch(err => console.log(err))
 
-            fetch("http://carbon-score.us-west-1.elasticbeanstalk.com/mapData" + (county != null && county != '' ? `?county=${county}` : ''))
+            fetch("http://carbon-score.us-west-1.elasticbeanstalk.com/existing_state_map" + (year != null && year != '' ? `?year=${year}` : ''))
                 .then(response => {
                     response.json().then(data => {
-                        setMapData(data)
+                        const statesMapData = data.map((stateAndScoreTuple) => abbrState(stateAndScoreTuple[0], 'abbr'))
+                        const scoresMapData = data.map((stateAndScoreTuple) => stateAndScoreTuple[1]*1000)
+                        setMapData(
+                            [{
+                                center: [37.354107, -121.955238],
+                                type: "choroplethmapbox", 
+                                name: "US states", 
+                                geojson: "https://raw.githubusercontent.com/python-visualization/folium/master/examples/data/us-states.json", 
+                                locations: statesMapData,
+                                z: scoresMapData,
+                                zmin: 25, 
+                                zmax: 280, 
+                                colorbar: {y: 0, yanchor: "bottom", title: {text: "US states", side: "right"}}
+                            }]
+                        )
                     })
                 })
                 .catch(err => console.log(err))
