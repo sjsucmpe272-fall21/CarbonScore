@@ -4,7 +4,7 @@ import os
 from pymongo import MongoClient
 import argparse
 import pandas as pd
-import xgboost as xgb
+#import xgboost as xgb
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
@@ -347,6 +347,7 @@ def get_city_score():
         else:
             return jsonify(f"Unsuccessful S3 get_object response. Status - {status}")
     except Exception as e:
+        #print(e)
         return jsonify(str(e))
 
 
