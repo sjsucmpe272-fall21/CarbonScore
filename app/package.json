@@ -65,5 +65,8 @@
   },
   "devDependencies": {
     "dotenv": "^10.0.0"
+  },
+  "devServer": {
+    "disableHostCheck": true
   }
 }
