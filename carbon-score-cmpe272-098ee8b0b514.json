@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "carbon-score-cmpe272",
+  "private_key_id": "098ee8b0b514f7f0abfdbea8561ebfd01d459afa",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCKMsHww9HiMWn3\n6X82JQQk7NXoQ2KTtTM8BASRN2QRlmmgAQ8vZ9n5wb2aFQrlnJ1GcSVBJoGoixIe\n4MmS38N8UPrJC8xFB6gpKZWb76gnG0Dv0zP2f1X3mJQ61po1SMBHTQPdtqy6+O4h\nJ+1YPwMbKXT3+LWx67xsvVotwmOZ11fArolBYdfbPl4Ic9ztqN7/CSG3n14v2Bi0\nK81G9qvcYAUuz2G1zUzTYh3ZlaJSZL4Wr1WJrTVvD41qBw7hQeMqf+9g1ZoteXiT\nkycbmr+20bHrTemhTjNhZ8QsKKt2//j+FPtiQlWMysiQEkGPlpCHtmA0tK7YORmO\nVwZQcXFtAgMBAAECggEABkjqJdKl9h6Eq5wAZ3GLV3Q3gyVOCO/Ijsi+U238h0nl\nmlD0rurPEIBq02R0bH5GRG3rVuPofsYk/WdVdhrmgei7NaRAy9KIvNHRu7fMWCDx\nalFaz4bkHYs1vITwxOO+2M9BZyvCUwt0kD3yWYfIvUtnRiABqqp7lR9kXT3goojw\ng+0hCXQvjS+paLVECBI7UtzrPYfoeGDj3Nv9SLvIaJKIrdW4FN8kRxAMV0GhkTpa\n+CuEkxA19WPmsYa/Fwqz9cabxv3tzBdPV47OXN2ApXLNs0qIAanLRHOuHo+3wfn/\nEINSyHNqUoSWRBHSGgHx7/C0WvPMaWx4UyyLg2hWeQKBgQC8/9IRMKASxkRqjj3r\nPjyuJm2fFOtWiEEr9uzvD4AojmUnMnvqnGbGdDviQEDPrdNv5r/RqlMM021eBtzP\nUHSnOT5ryGlo1P+teTmBQvP++B9FCyBlOO06CeTgP3Uzt6HY7FQLAo6FWds2D5Vo\nOINYEdAOMTwMduBRGUSi5rm9yQKBgQC7MJx7KjK90+aGERU4J2Ew6q5/kbR3aCPi\ngOrv70NkzZ3D2W7k4q5enSMIzWDc9lS/W4yk+HHMkFYRkvS2RmntGcVBsRXLWEB3\nAKe3z+MvfsKlgBe0BO4/Oza15K8WoKyt0oRD467Z1P1nzJNAq8xiWdQr3PaS4syc\ne0Ryzm8YhQKBgQCbkFmg6ownR+iSaEgQ9CZQFbNPKJHYpMg33sQAtZqAR0x9KfGT\nF28E1DFiNg7ioioRxjWG5xH60aAIr89aGNgbuGNnpgsVTZSxfcFWYvyglixu0Qy2\nJFgm2HP6HGFk0zY1bbhzY4RZwK9NXSBWK4X4nJjKxb2uaL6UIh87knu5+QKBgQCe\nf7bAAycb3QTgmC5jcdS12sEOe41XXfKko4xKxUlHXWMspjtjyxziOCOmHGDcOCfi\nL96TAVs6XyzBjLFwdYbToHKKASv3Fi7flMputbQkTyz5fdCUOWiSWc0ljxFCE6Kj\nPBGKeotfHx3CelJk/BL/ZBhnW53dGfUuuqFmpK0lEQKBgAw03ruVlXvsL6hyAyUV\nCDqP8BdIgTUFy6dgwHLzLkm6WNIODLyvLgpL0T3waCj04xH+vBct5RztcP3oH14/\nIX7tihUTIHCNMHzTo4/XVJyKIG8n08SjH9p6uFUdGnyu5gceChhFm5tZqCi/2ram\nUP9GeLJIhVhNfbqYYVX513lT\n-----END PRIVATE KEY-----\n",
+  "client_email": "client-lib-python@carbon-score-cmpe272.iam.gserviceaccount.com",
+  "client_id": "111400774366179439458",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/client-lib-python%40carbon-score-cmpe272.iam.gserviceaccount.com"
+}
