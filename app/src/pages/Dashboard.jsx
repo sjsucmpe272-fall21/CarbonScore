@@ -191,26 +191,20 @@ export default function Dashboard({
     const [mapData, setMapData] = useState(getDefaultMapData())
 
     useEffect(() => {
-        let existingCOCountyURL
-        let existingCOScoreCitiesURL
-        let existingCOtaxCounty
-        let existingCOURL
-        if (county != null) {
-            existingCOCountyURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_county" + 
-                (county != null && county != '' ? `?county=${county}` : '') + 
-                (year != null && year != '' ? `&year=${year}` : '')
-            existingCOScoreCitiesURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_score_cities" + 
-                (county != null && county != '' ? `?county=${county}` : '') + 
-                (year != null && year != '' ? `&year=${year}` : '')
-            existingCOtaxCounty = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_tax_county" +
-                (county != null && county != '' ? `?county=${county}` : '') + 
-                (year != null && year != '' ? `&year=${year}` : '')
-        } 
-        if (state != null) {
-            existingCOURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_state" + 
-                (state != null && state != '' ? `?state=${state}` : '') + 
-                (year != null && year != '' ? `&year=${year}` : '')
-        }
+        let existingCOCountyURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_county" + 
+            (county != null && county != '' ? `?county=${county}` : '') + 
+            (year != null && year != '' ? `&year=${year}` : '')
+        let existingCOScoreCitiesURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_score_cities" + 
+            (county != null && county != '' ? `?county=${county}` : '') + 
+            (year != null && year != '' ? `&year=${year}` : '')
+        let existingCOtaxCounty = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_tax_county" +
+            (county != null && county != '' ? `?county=${county}` : '') + 
+            (year != null && year != '' ? `&year=${year}` : '')
+        let existingCOURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_state" + 
+            (state != null && state != '' ? `?state=${state}` : '') + 
+            (year != null && year != '' ? `&year=${year}` : '')
+        let existingCOMapURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_state_map" + 
+            (year != null && year != '' ? `?year=${year}` : '')
 
         if (processOption === 'Existing') {
             fetch(existingCOScoreCitiesURL)
@@ -251,7 +245,7 @@ export default function Dashboard({
                 })
                 .catch(err => console.log(err))
 
-            fetch("http://carbon-score.us-west-1.elasticbeanstalk.com/existing_state_map" + (year != null && year != '' ? `?year=${year}` : ''))
+            fetch(existingCOMapURL)
                 .then(response => {
                     response.json().then(data => {
                         const statesMapData = data.map((stateAndScoreTuple) => abbrState(stateAndScoreTuple[0], 'abbr'))
@@ -281,7 +275,7 @@ export default function Dashboard({
         <div style={backgroundStyle}>
             <header>
                 <p>
-                    Dashboard
+                    Carbon Score Dashboard
                 </p>
             </header>
             <h1>

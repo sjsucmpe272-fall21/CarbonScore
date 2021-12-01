@@ -40,6 +40,7 @@ export default function LocationForm({
           stateCounty[state].push(county);
         })
         setSelectState(DEFAULT_STATE);
+        setSelectCounty(stateCounty[DEFAULT_STATE][0]);
         setMap(stateCounty)
       })
     })
