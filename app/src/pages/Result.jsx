@@ -25,33 +25,54 @@ export default function Result({
         ((process === 'Predict' ? 'Predicted Carbon Score for the year ' + year.toString() : 'Existing Carbon Score for the year ' + year.toString()) + ' in ' + locationInfo) 
         : 'Carbon Score'
 
+    const formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        
+        // These options are needed to round to whole numbers if that's what you want.
+        //minimumFractionDigits: 0, // (this suffices for whole numbers, but will print 2500.10 as $2,500.1)
+        //maximumFractionDigits: 0, // (causes 2500.99 to be printed as $2,501)
+        });
 
     useEffect(() => {
         if (process == null) {
             navigate('../', { state: {result:"abc"}, replace: false }) 
         }
+
+        const predictCOPollScore = "http://carbon-score-v2.us-west-1.elasticbeanstalk.com/predict_CO_score" +
+            (selectState != null && selectState != '' ? `?state=${selectState}` : '') + 
+            (selectCounty != null && selectCounty != '' ? `&county=${selectCounty}` : '') + 
+            (year != null && year != '' ? `&year=${year}` : '')
         const existingCOScoreCounty = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_score_county" +
             (selectCounty != null && selectCounty != '' ? `?county=${selectCounty}` : '') + 
             (year != null && year != '' ? `&year=${year}` : '')
-        fetch(existingCOScoreCounty)
+        fetch(process === 'Predict' ? predictCOPollScore : existingCOScoreCounty)
         .then(response => {
           response.json().then(data => {
-            setScore(data * 1000)
+            if (process === 'Existing') {
+                setScore(data * 1000)
+            } else {
+                setScore(data['carbonscore'] * 1000)
+                setTax(formatter.format(data['tax'] * 1000))
+            }
           })
         })
         .catch(err => console.log(err))
 
-        const existingCOTaxCounty = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_tax_county" +
-            (selectCounty != null && selectCounty != '' ? `?county=${selectCounty}` : '') + 
-            (year != null && year != '' ? `&year=${year}` : '')
-        fetch(existingCOTaxCounty)
-        .then(response => {
-          response.json().then(data => {
-            setTax(data)
-          })
-        })
-        .catch(err => console.log(err))
-      }, [])
+        if (process === 'Existing') {
+            const existingCOTaxCounty = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_tax_county" +
+                (selectCounty != null && selectCounty != '' ? `?county=${selectCounty}` : '') + 
+                (year != null && year != '' ? `&year=${year}` : '')
+            fetch(existingCOTaxCounty)
+                .then(response => {
+                response.json().then(data => {
+                    setTax(formatter.format(data * 1000))
+                })
+                })
+                .catch(err => console.log(err))
+            }
+    }, [])
+
 
     return (
         <div style={backgroundStyle}>
@@ -64,7 +85,7 @@ export default function Result({
                 </h1>
             </header>
             <div>
-                <h2>{'$' + tax}</h2>
+                <h2>{tax}</h2>
             </div>
             <br />
             <AwesomeButton onPress={handleGetData}>Dashboard</AwesomeButton>

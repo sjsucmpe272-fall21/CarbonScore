@@ -196,84 +196,98 @@ export default function Dashboard({
         if (processOption == null) {
             navigate('../', { state: {result:"abc"}, replace: false }) 
         }
-        let existingCOCountyURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_county" + 
+        const existingCOCountyURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_county" + 
             (county != null && county != '' ? `?county=${county}` : '') + 
             (year != null && year != '' ? `&year=${year}` : '')
-        let existingCOScoreCitiesURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_score_cities" + 
+        const existingCOScoreCitiesURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_score_cities" + 
             (county != null && county != '' ? `?county=${county}` : '') + 
             (year != null && year != '' ? `&year=${year}` : '')
-        let existingCOtaxCounty = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_tax_county" +
-            (county != null && county != '' ? `?county=${county}` : '') + 
-            (year != null && year != '' ? `&year=${year}` : '')
-        let existingCOMapURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_state_map" + 
+        const existingCOMapURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_state_map" + 
             (year != null && year != '' ? `?year=${year}` : '')
+        
+        const predictCOTableURL = "http://carbon-score-v2.us-west-1.elasticbeanstalk.com/predict_CO_table" +
+            (state != null && state != '' ? `?state=${state}` : '') + 
+            (county != null && county != '' ? `&county=${county}` : '') + 
+            (year != null && year != '' ? `&year=${year}` : '')
+        const predictCOPollCityURL = "http://carbon-score-v2.us-west-1.elasticbeanstalk.com/predict_CO_pollcity" +
+            (state != null && state != '' ? `?state=${state}` : '') + 
+            (county != null && county != '' ? `&county=${county}` : '') + 
+            (year != null && year != '' ? `&year=${year}` : '')
+        const predictCOPollMonthURL = "http://carbon-score-v2.us-west-1.elasticbeanstalk.com/predict_CO_pollmonth" +
+            (state != null && state != '' ? `?state=${state}` : '') + 
+            (county != null && county != '' ? `&county=${county}` : '') + 
+            (year != null && year != '' ? `&year=${year}` : '')
+        const predictCOMapURL = "http://carbon-score-v2.us-west-1.elasticbeanstalk.com/predict_CO_map" + 
+            (state != null && state != '' ? `?state=${state}` : '') + 
+            (county != null && county != '' ? `&county=${county}` : '') + 
+            (year != null && year != '' ? `&year=${year}` : '')
 
-        if (processOption === 'Existing') {
-            fetch(existingCOScoreCitiesURL)
-                .then(response => {
-                    response.json().then(data => {
-                        const cities = data.map(city => city[0])
-                        const scores = data.map(city => city[1]*1000)
-                        setBarChartData(
-                            [{
-                                x: cities,
-                                y: scores,
-                                type: 'bar',
-                                name: 'Carbon'
-                            }]
-                        )
+        fetch(processOption === 'Existing' ? existingCOScoreCitiesURL : predictCOPollCityURL)
+            .then(response => {
+                response.json().then(data => {
+                    const cities = processOption === 'Existing' ? data.map(city => city[0]) : data['x']
+                    const scores = processOption === 'Existing' ? data.map(city => city[1]*1000) : data['y']
+                    setBarChartData(
+                        [{
+                            x: cities,
+                            y: scores,
+                            type: 'bar',
+                            name: 'Carbon'
+                        }]
+                    )
+                    if (processOption === 'Existing') {
                         setTableChartData(getDefaultTableData([cities, scores]))
-                    })
+                    }
                 })
-                .catch(err => console.log(err))
+            })
+            .catch(err => console.log(err))
 
-            fetch(existingCOCountyURL)
-                .then(response => {
-                    response.json().then(data => {
-                        setLineChartData(
-                            [{
-                                x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                                y: data.map(item => Math.floor(item * 100)),
-                                type: 'scatter',
-                                name: 'Carbon'
-                            }]
-                        )
-                    })
+        fetch(processOption === 'Existing' ? existingCOCountyURL : predictCOPollMonthURL)
+            .then(response => {
+                response.json().then(data => {
+                    setLineChartData(
+                        [{
+                            x: processOption === 'Existing' ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] : data['x'],
+                            y: processOption === 'Existing' ? data.map(item => Math.floor(item * 100)) : data['y'].map(item => Math.floor(item * 1000)),
+                            type: 'scatter',
+                            name: 'Carbon'
+                        }]
+                    )
                 })
-                .catch(err => console.log(err))
+            })
+            .catch(err => console.log(err))
 
-            fetch("http://carbon-score.us-west-1.elasticbeanstalk.com/tableChartData" + (county != null && county != '' ? `?county=${county}` : ''))
+        if (processOption === 'Predict') {
+            fetch(predictCOTableURL)
                 .then(response => {
                     response.json().then(data => {
                         setTableChartData(data)
                     })
                 })
                 .catch(err => console.log(err))
-
-            fetch(existingCOMapURL)
-                .then(response => {
-                    response.json().then(data => {
-                        const statesMapData = data.map((stateAndScoreTuple) => abbrState(stateAndScoreTuple[0], 'abbr'))
-                        const scoresMapData = data.map((stateAndScoreTuple) => stateAndScoreTuple[1]*1000)
-                        setMapData(
-                            [{
-                                center: [37.354107, -121.955238],
-                                type: "choroplethmapbox", 
-                                name: "US states", 
-                                geojson: "https://raw.githubusercontent.com/python-visualization/folium/master/examples/data/us-states.json", 
-                                locations: statesMapData,
-                                z: scoresMapData,
-                                zmin: 25, 
-                                zmax: 280, 
-                                colorbar: {y: 0, yanchor: "bottom", title: {text: "US states", side: "right"}}
-                            }]
-                        )
-                    })
-                })
-                .catch(err => console.log(err))
-        } else {
-
         }
+
+        fetch(processOption === 'Existing' ? existingCOMapURL : predictCOMapURL)
+            .then(response => {
+                response.json().then(data => {
+                    const statesMapData = processOption === 'Existing' ? data.map((stateAndScoreTuple) => abbrState(stateAndScoreTuple[0], 'abbr')) : data['state']
+                    const scoresMapData = processOption === 'Existing' ? data.map((stateAndScoreTuple) => stateAndScoreTuple[1]*1000) : data['carbonscore'].map((score) => score * 1000)
+                    setMapData(
+                        [{
+                            center: [37.354107, -121.955238],
+                            type: "choroplethmapbox", 
+                            name: "US states", 
+                            geojson: "https://raw.githubusercontent.com/python-visualization/folium/master/examples/data/us-states.json", 
+                            locations: statesMapData,
+                            z: scoresMapData,
+                            zmin: 25, 
+                            zmax: 280, 
+                            colorbar: {y: 0, yanchor: "bottom", title: {text: "US states", side: "right"}}
+                        }]
+                    )
+                })
+            })
+            .catch(err => console.log(err))
       }, [])
 
       return (
