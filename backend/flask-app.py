@@ -5,12 +5,12 @@ from pymongo import MongoClient
 import argparse
 import pandas as pd
 #import xgboost as xgb
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error
+# from sklearn.model_selection import train_test_split
+# from sklearn.preprocessing import MinMaxScaler
+# from sklearn.metrics import mean_squared_error
 import datetime
-import joblib
-import pickle
+#import joblib
+#import pickle
 from mapping import *
 import boto3
 
@@ -31,7 +31,7 @@ statep = "statemap.pkl"
 # s_poll = pickle.load(open(pollp, 'rb'))
 # s_smap = pickle.load(open(statep, 'rb'))
 print("Training Model Loaded!!")
-scaler = MinMaxScaler()
+# scaler = MinMaxScaler()
 
 def connectToMongoCollection():
     # mongo_client = MongoClient("mongodb://localhost:27017/")
@@ -149,6 +149,137 @@ def get_cities_CO_score():
         score = round(row['mean'], 3)
         score_list.append([row['city'], score])
     return jsonify(score_list)
+
+@app.route("/predict_CO_score")
+def get_CO_score_pred():
+    state = request.args.get("state")
+    county = request.args.get("county")
+    year = int(request.args.get("year"))
+    find_str = {"state_code":state_mapping[state],"county_code":county_mapping[county], "year":year}
+    carbon_collection = db['predict_table']
+    # find_str = {'county': county, 'year':  year}
+    result = carbon_collection.find_one(find_str)
+    cs = round(result["carbonscore"],3)
+    return jsonify({"carbonscore":cs, "tax": round(cs*4700, 2)})
+
+@app.route("/predict_CO_map")
+def get_map_CO_score():
+    ddict = {'state_code':[],
+        'year':[]
+    }
+    op = []
+    fo = []
+    ddf = pd.DataFrame(ddict)
+    ddf["state_code"] = ddf["state_code"].astype(int)
+    ddf["year"] = ddf["year"].astype(int)
+    year = int(request.args.get("year"))
+    map_collection = db['predict_map']
+    for i in list(state_abb.keys()):
+        if(i in list(state_mapping.keys())):
+            ddf.loc[len(ddf.index)] = [state_mapping[i],  year]
+            op.append(state_abb[i])
+    for index,row in ddf.iterrows():
+        result = map_collection.find_one({"state_code":row["state_code"],"year":year})
+        fo.append(round(result["carbonscore"],3))
+    return jsonify({"state":op, "carbonscore":fo})
+
+@app.route("/predict_CO_pollmonth")
+def get_line_CO_score():
+    ddict = {'state_code':[],
+        'county_code':[],
+        'year':[],
+        'month' : []
+    }
+
+    fo = []
+    ddf = pd.DataFrame(ddict)
+    ddf["state_code"] = ddf["state_code"].astype(int)
+    ddf["county_code"] = ddf["county_code"].astype(int)
+    ddf["year"] = ddf["year"].astype(int)
+    ddf["month"] = ddf["month"].astype(int)
+
+    year = int(request.args.get("year"))
+    state = request.args.get("state")
+    county = request.args.get("county")
+
+    line_collection = db['predict_line']
+    state_code = state_mapping[state]
+    county_code = county_mapping[county]
+    
+    for i in range(1,13):
+        ddf.loc[len(ddf.index)] = [state_code,county_code , year, i]
+    
+    for index,row in ddf.iterrows():
+        #print({"state_code":row["state_code"],"county_code":row["county_code"], "month":row["month"], "year":row["year"]})
+        result = line_collection.find_one({"state_code":row["state_code"],"county_code":row["county_code"], "month":row["month"], "year":row["year"]})
+        fo.append(round(result["carbonscore"],3))
+    
+    return jsonify({"x":chart_res, "y" :fo})
+
+@app.route("/predict_CO_pollcity")
+def get_bar_CO_score():
+    ddict = {'state_code':[],
+        'county_code':[],
+        'year':[],
+        'city_num' : []
+    }
+
+    fo = []
+    ddf = pd.DataFrame(ddict)
+    ddf["state_code"] = ddf["state_code"].astype(int)
+    ddf["county_code"] = ddf["county_code"].astype(int)
+    ddf["year"] = ddf["year"].astype(int)
+    ddf["city_num"] = ddf["city_num"].astype(int)
+
+    year = int(request.args.get("year"))
+    state = request.args.get("state")
+    county = request.args.get("county")
+
+    bar_collection = db['predict_bar']
+    state_code = state_mapping[state]
+    county_code = county_mapping[county]
+    
+    for i in city_detail[county]:
+        ddf.loc[len(ddf.index)] = [state_code,county_code , year, city_mapping[i]]
+    
+    for index,row in ddf.iterrows():
+        #print({"state_code":row["state_code"],"county_code":row["county_code"], "city_num":row["city_num"], "year":row["year"]})
+        result = bar_collection.find_one({"state_code":row["state_code"],"county_code":row["county_code"], "city_num":row["city_num"], "year":row["year"]})
+        fo.append(round(result["carbonscore"],3))
+    
+    return jsonify({"x":city_detail[county], "y" :fo})
+
+@app.route("/predict_CO_table")
+def get_table_CO_score():
+    ddict = {'state_code':[],
+        'county_code':[],
+        'year':[]
+    }
+
+    fo = []
+    ddf = pd.DataFrame(ddict)
+    ddf["state_code"] = ddf["state_code"].astype(int)
+    ddf["county_code"] = ddf["county_code"].astype(int)
+    ddf["year"] = ddf["year"].astype(int)
+
+
+    year = int(request.args.get("year"))
+    state = request.args.get("state")
+    #county = request.args.get("county")
+
+    table_collection = db['predict_table']
+    state_code = state_mapping[state]
+    #county_code = county_mapping[county]
+    
+    for i in county_names_dict[state]:
+        ddf.loc[len(ddf.index)] = [state_code, county_mapping[i], year]
+    
+    for index,row in ddf.iterrows():
+        #print({"state_code":row["state_code"],"county_code":row["county_code"], "year":row["year"]})
+        result = table_collection.find_one({"state_code":row["state_code"],"county_code":row["county_code"], "year":row["year"]})
+        fo.append(round(result["carbonscore"],3))
+    
+    return jsonify({"county":county_names_dict[state], "carbonscore": fo})
 
 @app.route("/s3")
 def test_s3():
@@ -389,12 +520,13 @@ def get_table_score():
         return jsonify(str(e))
 
 
+
 if __name__ == '__main__':
-    connectToMongoCollection()
-    init_states()
-    init_counties()
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    #connectToMongoCollection()
+    # init_states()
+    # init_counties()
+    # app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
     #ddf = init_full_data()
     #model_cs, scaler = get_model(ddf)
-    #app.run(host="0.0.0.0")
+    app.run(host="0.0.0.0")
     #app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
