@@ -123,22 +123,13 @@ const getDefaultLineChartData = () => {
     return [lineChartTrace1, lineChartTrace2]
 }
 
-const getDefaultTableData = () => {
-    const values = [
-        ['Salaries', 'Office', 'Merchandise', 'Legal', '<b>TOTAL<br>EXPENSES</b>'],
-        ["Lorem ipsum dolor sit amet, tollit discere inermis pri ut. Eos ea iusto timeam, an prima laboramus vim. Id usu aeterno adversarium, summo mollis timeam vel ad",
-       "Lorem ipsum dolor sit amet, tollit discere inermis pri ut. Eos ea iusto timeam, an prima laboramus vim. Id usu aeterno adversarium, summo mollis timeam vel ad",
-       "Lorem ipsum dolor sit amet, tollit discere inermis pri ut. Eos ea iusto timeam, an prima laboramus vim. Id usu aeterno adversarium, summo mollis timeam vel ad",
-       "Lorem ipsum dolor sit amet, tollit discere inermis pri ut. Eos ea iusto timeam, an prima laboramus vim. Id usu aeterno adversarium, summo mollis timeam vel ad",
-      "Lorem ipsum dolor sit amet, tollit discere inermis pri ut. Eos ea iusto timeam, an prima laboramus vim. Id usu aeterno adversarium, summo mollis timeam vel ad"]
-    ]
-  
+const getDefaultTableData = (values) => {
     const data = [{
         type: 'table',
         columnorder: [1,2],
         columnwidth: [100,200],
         header: {
-        values: [["<b>Name</b>"], ["<b>DESCRIPTION</b>"]],
+        values: [["<b>City</b>"], ["<b>Score</b>"]],
         align: ["left", "center"],
         height: 40,
         line: {width: 1, color: '#506784'},
@@ -187,7 +178,16 @@ export default function Dashboard({
     const config = {mapboxAccessToken: process.env.REACT_APP_MAP_BOX_ACCESS_TOKEN}
     const [barChartData, setBarChartData] = useState(getDefaultBarChartData())
     const [lineChartData, setLineChartData] = useState(getDefaultLineChartData())
-    const [tableData, setTableChartData] = useState(getDefaultTableData())
+    const [tableData, setTableChartData] = useState(getDefaultTableData(
+        [
+            ['Salaries', 'Office', 'Merchandise', 'Legal', '<b>TOTAL<br>EXPENSES</b>'],
+            ["Lorem ipsum dolor sit amet, tollit discere inermis pri ut. Eos ea iusto timeam, an prima laboramus vim. Id usu aeterno adversarium, summo mollis timeam vel ad",
+           "Lorem ipsum dolor sit amet, tollit discere inermis pri ut. Eos ea iusto timeam, an prima laboramus vim. Id usu aeterno adversarium, summo mollis timeam vel ad",
+           "Lorem ipsum dolor sit amet, tollit discere inermis pri ut. Eos ea iusto timeam, an prima laboramus vim. Id usu aeterno adversarium, summo mollis timeam vel ad",
+           "Lorem ipsum dolor sit amet, tollit discere inermis pri ut. Eos ea iusto timeam, an prima laboramus vim. Id usu aeterno adversarium, summo mollis timeam vel ad",
+          "Lorem ipsum dolor sit amet, tollit discere inermis pri ut. Eos ea iusto timeam, an prima laboramus vim. Id usu aeterno adversarium, summo mollis timeam vel ad"]
+        ]
+    ))
     const [mapData, setMapData] = useState(getDefaultMapData())
 
     useEffect(() => {
@@ -210,14 +210,17 @@ export default function Dashboard({
             fetch(existingCOScoreCitiesURL)
                 .then(response => {
                     response.json().then(data => {
+                        const cities = data.map(city => city[0])
+                        const scores = data.map(city => city[1])
                         setBarChartData(
                             [{
-                                x: data.map(city => city[0]),
-                                y: data.map(city => city[1]),
+                                x: cities,
+                                y: scores,
                                 type: 'bar',
                                 name: 'Carbon'
                             }]
                         )
+                        setTableChartData(getDefaultTableData([cities, scores]))
                     })
                 })
                 .catch(err => console.log(err))
@@ -322,7 +325,7 @@ export default function Dashboard({
                         <Plot
                             config={config}
                             data={barChartData}
-                            layout={ {barmode: 'group', title: 'Annual Breakdown', width: 500, height: 300, plot_bgcolor:"black",paper_bgcolor:"#21242B"} }
+                            layout={ {barmode: 'group', title: 'City Breakdown', width: 500, height: 300, plot_bgcolor:"black",paper_bgcolor:"#21242B"} }
                         />
                     </div>
                 </div>
