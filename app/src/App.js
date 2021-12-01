@@ -45,6 +45,7 @@ function App() {
             path="location" 
             element={
               <LocationForm
+                process={process}
                 selectState={selectState}
                 setSelectState={setSelectState}
                 setSelectCounty={setSelectCounty}
@@ -55,6 +56,7 @@ function App() {
             path="time" 
             element={
               <TimeForm
+                process={process}
                 maxYear={maxYear}
                 minYear={minYear}
                 setYear={setYear}

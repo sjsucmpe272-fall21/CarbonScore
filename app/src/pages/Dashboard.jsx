@@ -2,6 +2,7 @@ import React, {useState, useEffect} from 'react'
 import { useLocation } from 'react-router';
 import { backgroundStyle } from './Landing'
 import Plot from 'react-plotly.js';
+import {useNavigate} from 'react-router-dom';
 
 function abbrState(input, to){
     
@@ -174,6 +175,7 @@ export default function Dashboard({
     year,
 }) {
     let location = useLocation();
+    const navigate = useNavigate();
     const { data } = location.state;
     const config = {mapboxAccessToken: process.env.REACT_APP_MAP_BOX_ACCESS_TOKEN}
     const [barChartData, setBarChartData] = useState(getDefaultBarChartData())
@@ -191,6 +193,9 @@ export default function Dashboard({
     const [mapData, setMapData] = useState(getDefaultMapData())
 
     useEffect(() => {
+        if (processOption == null) {
+            navigate('../', { state: {result:"abc"}, replace: false }) 
+        }
         let existingCOCountyURL = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_county" + 
             (county != null && county != '' ? `?county=${county}` : '') + 
             (year != null && year != '' ? `&year=${year}` : '')

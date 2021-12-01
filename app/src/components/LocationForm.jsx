@@ -19,6 +19,7 @@ const addressInput = {
   };
   
 export default function LocationForm({
+  process,
   selectState,
   setSelectCounty,
   setSelectState,
@@ -28,6 +29,9 @@ export default function LocationForm({
   let navigate = useNavigate();
 
   useEffect(() => {
+    if (process == null) {
+      navigate('../', { state: {result:"abc"}, replace: false }) 
+    }
     fetch( "http://carbon-score.us-west-1.elasticbeanstalk.com/counties")
     .then(response => {
       response.json().then(data => {

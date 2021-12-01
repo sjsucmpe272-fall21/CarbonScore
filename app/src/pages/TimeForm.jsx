@@ -19,11 +19,17 @@ const addressInput = {
 export default function LocationForm({
   minYear,
   maxYear,
+  process,
   setYear,
   year, 
 }) {
     const navigate = useNavigate();
 
+    useEffect(() => {
+        if (process == null) {
+            navigate('../', { state: {result:"abc"}, replace: false }) 
+        }
+    }, []);
     return (
         <div style={backgroundStyle}>
             <header>

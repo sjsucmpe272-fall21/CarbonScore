@@ -27,6 +27,9 @@ export default function Result({
 
 
     useEffect(() => {
+        if (process == null) {
+            navigate('../', { state: {result:"abc"}, replace: false }) 
+        }
         const existingCOScoreCounty = "http://carbon-score.us-west-1.elasticbeanstalk.com/existing_CO_score_county" +
             (selectCounty != null && selectCounty != '' ? `?county=${selectCounty}` : '') + 
             (year != null && year != '' ? `&year=${year}` : '')
