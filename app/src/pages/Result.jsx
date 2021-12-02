@@ -53,7 +53,7 @@ export default function Result({
                 setScore(data * 1000)
             } else {
                 setScore(data['carbonscore'] * 1000)
-                setTax(formatter.format(data['tax']))
+                setTax(formatter.format(data['tax']*10))
             }
           })
         })
@@ -66,7 +66,7 @@ export default function Result({
             fetch(existingCOTaxCounty)
                 .then(response => {
                     response.json().then(data => {
-                        setTax(formatter.format(data))
+                        setTax(formatter.format(data*10))
                     })
                 })
                 .catch(err => console.log(err))
@@ -85,6 +85,7 @@ export default function Result({
                 </h1>
             </header>
             <div>
+                <p>{'Equivalent Tax Amount (USD)'}</p>
                 <h2>{tax}</h2>
             </div>
             <br />
