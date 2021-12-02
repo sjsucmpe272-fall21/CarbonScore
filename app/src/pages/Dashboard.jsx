@@ -116,13 +116,13 @@ const getDefaultLineChartData = () => {
     return [lineChartTrace1, lineChartTrace2]
 }
 
-const getDefaultTableData = (values) => {
+const getDefaultTableData = (values, title) => {
     const data = [{
         type: 'table',
         columnorder: [1,2],
         columnwidth: [100,200],
         header: {
-        values: [["<b>City</b>"], ["<b>Score</b>"]],
+        values: [[`<b>${title}</b>`], ["<b>Score</b>"]],
         align: ["left", "center"],
         height: 40,
         line: {width: 1, color: '#506784'},
@@ -180,7 +180,8 @@ export default function Dashboard({
            "Lorem ipsum dolor sit amet, tollit discere inermis pri ut. Eos ea iusto timeam, an prima laboramus vim. Id usu aeterno adversarium, summo mollis timeam vel ad",
            "Lorem ipsum dolor sit amet, tollit discere inermis pri ut. Eos ea iusto timeam, an prima laboramus vim. Id usu aeterno adversarium, summo mollis timeam vel ad",
           "Lorem ipsum dolor sit amet, tollit discere inermis pri ut. Eos ea iusto timeam, an prima laboramus vim. Id usu aeterno adversarium, summo mollis timeam vel ad"]
-        ]
+        ],
+        'City'
     ))
     const [mapData, setMapData] = useState(getDefaultMapData())
 
@@ -228,7 +229,7 @@ export default function Dashboard({
                         }]
                     )
                     if (processOption === 'Existing') {
-                        setTableChartData(getDefaultTableData([cities, scores]))
+                        setTableChartData(getDefaultTableData([cities, scores], 'City'))
                     }
                 })
             })
@@ -253,7 +254,7 @@ export default function Dashboard({
             fetch(predictCOTableURL)
                 .then(response => {
                     response.json().then(data => {
-                        setTableChartData(getDefaultTableData([data['county'], data['carbonscore'].map((score)=>(score*1000).toString())]))
+                        setTableChartData(getDefaultTableData([data['county'], data['carbonscore'].map((score)=>(score*1000).toString())], 'County'))
                     })
                 })
                 .catch(err => console.log(err))
