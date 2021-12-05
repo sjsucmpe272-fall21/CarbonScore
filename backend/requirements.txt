@@ -4,4 +4,3 @@ pymongo[srv]
 flask-cors
 boto3
 pandas
-sklearn

@@ -4,6 +4,7 @@ import os
 from pymongo import MongoClient
 import argparse
 import pandas as pd
+<<<<<<< HEAD
 #import xgboost as xgb
 # from sklearn.model_selection import train_test_split
 # from sklearn.preprocessing import MinMaxScaler
@@ -11,9 +12,11 @@ import pandas as pd
 import datetime
 #import joblib
 #import pickle
+=======
+import datetime
+>>>>>>> 672c84182de5e38f5cba0a09ccbe0598bd50c0cf
 from mapping import *
 import boto3
-
 
 app = Flask(__name__)
 CORS(app)
@@ -22,6 +25,7 @@ county_names = []
 offset_interval = 80000
 row_count = 8614411
 model_cs = ""
+<<<<<<< HEAD
 mapp = "map.pkl"
 chartp = "charts.pkl"
 pollp = "pollutant.pkl" 
@@ -32,6 +36,8 @@ statep = "statemap.pkl"
 # s_smap = pickle.load(open(statep, 'rb'))
 print("Training Model Loaded!!")
 # scaler = MinMaxScaler()
+=======
+>>>>>>> 672c84182de5e38f5cba0a09ccbe0598bd50c0cf
 
 def connectToMongoCollection():
     # mongo_client = MongoClient("mongodb://localhost:27017/")
@@ -280,6 +286,17 @@ def get_table_CO_score():
         fo.append(round(result["carbonscore"],3))
     
     return jsonify({"county":county_names_dict[state], "carbonscore": fo})
+@app.route("/existing_state_map")
+def get_state_map():
+    year = int(request.args.get("year"))
+    state_collection = db['state_CO_year_agg']
+    find_str = {'year':  year}
+    result = state_collection.find(find_str)
+    score_list = []
+    for row in result:
+        score = round(row['mean'], 3)
+        score_list.append([row['state'], score])
+    return jsonify(score_list)
 
 @app.route("/s3")
 def test_s3():
@@ -335,125 +352,86 @@ def test_s3_small():
     except Exception as e:
         return jsonify(str(e))
 
-@app.route("/getcscore")
-def get_carbon_score():
-    bucket = 'elasticbeanstalk-us-west-1-647979114575'
-    file = 'map.pkl'
-    try:
-        '''s3_client = boto3.client(
-            "s3",
-            aws_access_key_id='',
-            aws_secret_access_key=''
-        )'''
-        s3_client = boto3.client('s3')
-        response = s3_client.get_object(Bucket=bucket, Key=file)
-        status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
-
-        if status == 200:
-            state = str(request.args.get("state"))
-            county = str(request.args.get("county"))
-            year = int(request.args.get("year"))
-            new_df = pd.DataFrame({"state_code":[state_mapping[state]], "county_code":[county_mapping[county]],  "year":[year]})
-            scaled_val = scaler.fit_transform(new_df)
-            model_map = pickle.loads(response.get("Body").read())
-            #model_map = s_map
-            cs = model_map.predict(scaled_val)[0]
-            return jsonify({"Carbon Score":cs, "tax_amount": (cs*4700).round(2) })
-        else:
-            return jsonify(f"Unsuccessful S3 get_object response. Status - {status}")
-    except Exception as e:
-        return jsonify(str(e))
+@app.route("/predict_CO_score")
+def get_CO_score_pred():
+    state = request.args.get("state")
+    county = request.args.get("county")
+    year = int(request.args.get("year"))
+    find_str = {"state_code": int(state_mapping[state]), "county_code": int(county_mapping[county]), "year": int(year)}
+    carbon_collection = db['predict_table']
+    # find_str = {'county': county, 'year':  year}
+    result = carbon_collection.find_one(find_str)
+    cs = round(result["carbonscore"], 3)
+    return jsonify({"carbonscore": cs, "tax": round(cs * 4700, 2)})
 
 
-@app.route("/getcmap")
-def get_map_score():
-    bucket = 'elasticbeanstalk-us-west-1-647979114575'
-    file = 'statemap.pkl'
-    try:
-        '''s3_client = boto3.client(
-            "s3",
-            aws_access_key_id='',
-            aws_secret_access_key=''
-        )'''
-        s3_client = boto3.client('s3')
-        response = s3_client.get_object(Bucket=bucket, Key=file)
-        status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+@app.route("/predict_CO_map")
+def get_map_CO_score():
+    ddict = {'state_code': [],
+             'year': []
+             }
+    op = []
+    fo = []
+    ddf = pd.DataFrame(ddict)
+    ddf["state_code"] = ddf["state_code"].astype(int)
+    ddf["year"] = ddf["year"].astype(int)
+    year = int(request.args.get("year"))
+    map_collection = db['predict_map']
+    for i in list(state_abb.keys()):
+        if (i in list(state_mapping.keys())):
+            ddf.loc[len(ddf.index)] = [state_mapping[i], year]
+            op.append(state_abb[i])
+    for index, row in ddf.iterrows():
+        result = map_collection.find_one({"state_code": int(row["state_code"]), "year": int(year)})
+        fo.append(round(result["carbonscore"], 3))
+    return jsonify({"state": op, "carbonscore": fo})
 
-        if status == 200:
-            ddict = {'state_code':[],
-                'year':[]
-            }
-            ddf = pd.DataFrame(ddict)
-            year = int(request.args.get("year"))
-            op = []
-            for i in list(state_abb.keys()):
-                if(i in list(state_mapping.keys())):
-                    ddf.loc[len(ddf.index)] = [state_mapping[i],  year]
-                    op.append(state_abb[i])
-            model_map = pickle.loads(response.get("Body").read())
-            scaled_val = scaler.fit_transform(ddf)
-            #model_map = s_smap
-            cs = model_map.predict(scaled_val)
-            return jsonify({"state":op, "carbon_score":list(cs)})
-        else:
-            return jsonify(f"Unsuccessful S3 get_object response. Status - {status}")
-    except Exception as e:
-        return jsonify(str(e))
 
-@app.route("/getpchart")
-def get_pollutant_score():
-    bucket = 'elasticbeanstalk-us-west-1-647979114575'
-    file = 'charts.pkl'
-    try:
-        '''s3_client = boto3.client(
-            "s3",
-            aws_access_key_id='',
-            aws_secret_access_key=''
-        )'''
-        s3_client = boto3.client('s3')
-        response = s3_client.get_object(Bucket=bucket, Key=file)
-        status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+@app.route("/predict_CO_pollmonth")
+def get_line_CO_score():
+    ddict = {'state_code': [],
+             'county_code': [],
+             'year': [],
+             'month': []
+             }
 
-        if status == 200:
-            ddict = {'state_code':[],
-                'county_code':[],
-                'year':[],
-                'month' : []
-            }
-            ddf = pd.DataFrame(ddict)
-            state = str(request.args.get("state"))
-            year = int(request.args.get("year"))
-            county = str(request.args.get("county"))
-            state_code = state_mapping[state]
-            county_code = county_mapping[county]
-            #print(county_names['California'])
-            for i in range(1,13):
-                ddf.loc[len(ddf.index)] = [state_code,county_code , year, i]
-            scaled_val = scaler.fit_transform(ddf)
-            model_chart = pickle.loads(response.get("Body").read())
-            cs = model_chart.predict(scaled_val)
-            cs = [i.round(2) for i in cs]
-            res = {"x":chart_res, "y" :cs}
-            return jsonify(res)
-        else:
-            return jsonify(f"Unsuccessful S3 get_object response. Status - {status}")
-    except Exception as e:
-        return jsonify(str(e))
+    fo = []
+    ddf = pd.DataFrame(ddict)
+    ddf["state_code"] = ddf["state_code"].astype(int)
+    ddf["county_code"] = ddf["county_code"].astype(int)
+    ddf["year"] = ddf["year"].astype(int)
+    ddf["month"] = ddf["month"].astype(int)
 
-@app.route("/getcchart")
-def get_city_score():
-    bucket = 'elasticbeanstalk-us-west-1-647979114575'
-    file = 'pollutant.pkl'
-    try:
-        '''s3_client = boto3.client(
-            "s3",
-            aws_access_key_id='',
-            aws_secret_access_key=''
-        )'''
-        s3_client = boto3.client('s3')
-        response = s3_client.get_object(Bucket=bucket, Key=file)
-        status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+    year = int(request.args.get("year"))
+    state = request.args.get("state")
+    county = request.args.get("county")
 
+    line_collection = db['predict_line']
+    state_code = state_mapping[state]
+    county_code = county_mapping[county]
+
+    for i in range(1, 13):
+        ddf.loc[len(ddf.index)] = [state_code, county_code, year, i]
+
+    for index, row in ddf.iterrows():
+        # print({"state_code":row["state_code"],"county_code":row["county_code"], "month":row["month"], "year":row["year"]})
+        result = line_collection.find_one(
+            {"state_code": int(row["state_code"]), "county_code": int(row["county_code"]), "month": int(row["month"]),
+             "year": int(row["year"])})
+        fo.append(round(result["carbonscore"], 3))
+
+    return jsonify({"x": chart_res, "y": fo})
+
+
+@app.route("/predict_CO_pollcity")
+def get_bar_CO_score():
+    ddict = {'state_code': [],
+             'county_code': [],
+             'year': [],
+             'city_num': []
+             }
+
+<<<<<<< HEAD
         if status == 200:
             ddict = {'state_code':[],
                 'county_code':[],
@@ -480,44 +458,67 @@ def get_city_score():
     except Exception as e:
         #print(e)
         return jsonify(str(e))
+=======
+    fo = []
+    ddf = pd.DataFrame(ddict)
+    ddf["state_code"] = ddf["state_code"].astype(int)
+    ddf["county_code"] = ddf["county_code"].astype(int)
+    ddf["year"] = ddf["year"].astype(int)
+    ddf["city_num"] = ddf["city_num"].astype(int)
+>>>>>>> 672c84182de5e38f5cba0a09ccbe0598bd50c0cf
+
+    year = int(request.args.get("year"))
+    state = request.args.get("state")
+    county = request.args.get("county")
+
+    bar_collection = db['predict_bar']
+    state_code = state_mapping[state]
+    county_code = county_mapping[county]
+
+    for i in city_detail[county]:
+        ddf.loc[len(ddf.index)] = [state_code, county_code, year, city_mapping[i]]
+
+    for index, row in ddf.iterrows():
+        # print({"state_code":row["state_code"],"county_code":row["county_code"], "city_num":row["city_num"], "year":row["year"]})
+        result = bar_collection.find_one(
+            {"state_code": int(row["state_code"]), "county_code": int(row["county_code"]), "city_num": int(row["city_num"]),
+             "year": int(row["year"])})
+        fo.append(round(result["carbonscore"], 3))
+
+    return jsonify({"x": city_detail[county], "y": fo})
 
 
-@app.route("/get_table_pred")
-def get_table_score():
-    bucket = 'elasticbeanstalk-us-west-1-647979114575'
-    file = 'map.pkl'
-    try:
-        '''s3_client = boto3.client(
-            "s3",
-            aws_access_key_id='',
-            aws_secret_access_key=''
-        )'''
-        s3_client = boto3.client('s3')
-        response = s3_client.get_object(Bucket=bucket, Key=file)
-        status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+@app.route("/predict_CO_table")
+def get_table_CO_score():
+    ddict = {'state_code': [],
+             'county_code': [],
+             'year': []
+             }
 
-        if status == 200:
-            ddict = {'state_code':[],
-                'county_code':[],
-                'year':[]
-            }
-            ddf = pd.DataFrame(ddict)
-            state = str(request.args.get("state"))
-            year = int(request.args.get("year"))
-            state_code = state_mapping[state]
-            for i in county_names_dict[state]:
-                #print(county_mapping[i])
-                ddf.loc[len(ddf.index)] = [state_code, county_mapping[i], year]
-            scaled_val = scaler.fit_transform(ddf)
-            model_map = pickle.loads(response.get("Body").read())
-            #model_map = s_map
-            cs = model_map.predict(scaled_val)
-            #print(cs)
-            return jsonify({"county":county_names_dict[state], "carbonscore": list(cs)})
-        else:
-            return jsonify(f"Unsuccessful S3 get_object response. Status - {status}")
-    except Exception as e:
-        return jsonify(str(e))
+    fo = []
+    ddf = pd.DataFrame(ddict)
+    ddf["state_code"] = ddf["state_code"].astype(int)
+    ddf["county_code"] = ddf["county_code"].astype(int)
+    ddf["year"] = ddf["year"].astype(int)
+
+    year = int(request.args.get("year"))
+    state = request.args.get("state")
+    # county = request.args.get("county")
+
+    table_collection = db['predict_table']
+    state_code = state_mapping[state]
+    # county_code = county_mapping[county]
+
+    for i in county_names_dict[state]:
+        ddf.loc[len(ddf.index)] = [state_code, county_mapping[i], year]
+
+    for index, row in ddf.iterrows():
+        # print({"state_code":row["state_code"],"county_code":row["county_code"], "year":row["year"]})
+        result = table_collection.find_one(
+            {"state_code": int(row["state_code"]), "county_code": int(row["county_code"]), "year": int(row["year"])})
+        fo.append(round(result["carbonscore"], 3))
+
+    return jsonify({"county": county_names_dict[state], "carbonscore": fo})
 
 
 
